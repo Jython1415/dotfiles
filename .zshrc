@@ -134,4 +134,4 @@ export PATH="$PATH:/Users/Joshua/.local/bin"
 export PATH="/Library/TeX/texbin:$PATH"
 
 # Convenience
-alias reload-zsh="source ~/.zshrc"
+alias reload="source ~/.zshrc"
