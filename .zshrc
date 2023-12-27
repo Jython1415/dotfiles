@@ -135,3 +135,4 @@ export PATH="/Library/TeX/texbin:$PATH"
 
 # Convenience
 alias reload="source ~/.zshrc"
+alias search-aliases="alias | grep"
