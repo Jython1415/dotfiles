@@ -135,9 +135,7 @@ export PATH="/Library/TeX/texbin:$PATH"
 
 # Convenience
 alias reload="source ~/.zshrc"
-alias search-aliases="alias | grep"
-alias sea="search-aliases"
-alias search-pip="pip list | grep"
-alias sep="search-pip"
+alias sea="alias | grep"
+alias sep="pip list | grep"
 alias sizes="du -sch *"
 alias sln="ln -s"
