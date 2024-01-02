@@ -135,6 +135,8 @@ export PATH="/Library/TeX/texbin:$PATH"
 
 # Convenience
 alias reload="source ~/.zshrc"
+alias ga="git add --patch"
+alias ganpa="git add"
 alias sea="alias | grep"
 alias sep="pip list | grep"
 alias sizes="du -sch *"
