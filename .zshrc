@@ -124,7 +124,7 @@ source ~/.vscode-python/deactivate
 
 # git executable
 alias git='/opt/homebrew/bin/git'
-alias git-branch-clean="git branch --merged | egrep -v \"(^\*|main|master)\" | xargs -r git branch -d"
+alias gbc="git branch --merged | egrep -v \"(^\*|main|master)\" | xargs -r git branch -d"
 export LESS=FRX
 
 # Created by `pipx` on 2023-11-12 17:51:42
