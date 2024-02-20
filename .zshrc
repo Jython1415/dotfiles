@@ -133,6 +133,9 @@ export PATH="$PATH:/Users/Joshua/.local/bin"
 # TeX
 export PATH="/Library/TeX/texbin:$PATH"
 
+# raco for Magic Racket in VSCode
+export PATH="/Applications/Racket v8.11.1/bin:$PATH"
+
 # Convenience
 alias reload="source ~/.zshrc"
 alias ga="git add --patch"
