@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Parse command line arguments
+filter_name=$1
+action=$2
+shift 2
+args="$@"
+
+# Check if filter-name and action are provided
+if [ -z "$filter_name" ] || [ -z "$action" ]; then
+    echo "Usage: git-with-disabled-filter [filter-name] [git command] [other arguments]"
+    exit 1
+fi
+
+# Construct git command
+git_command="git $action -c filter.$filter_name.clean=cat"
+
+# Add other arguments
+git_command+=" $args"
+
+# Execute the constructed git command
+eval "$git_command"
