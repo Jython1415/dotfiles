@@ -13,7 +13,7 @@ if [ -z "$filter_name" ] || [ -z "$action" ]; then
 fi
 
 # Construct git command
-git_command="git $action -c filter.$filter_name.clean=cat"
+git_command="git -c filter.$filter_name.clean=cat $action"
 
 # Add other arguments
 git_command+=" $args"
