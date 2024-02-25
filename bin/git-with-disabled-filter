@@ -19,4 +19,5 @@ git_command="git $action -c filter.$filter_name.clean=cat"
 git_command+=" $args"
 
 # Execute the constructed git command
+echo "Evaluating: $git_command"
 eval "$git_command"
