@@ -137,6 +137,7 @@ export PATH="/Library/TeX/texbin:$PATH"
 export PATH="/Applications/Racket v8.11.1/bin:$PATH"
 
 # Convenience
+alias c="clear"
 alias reload="source ~/.zshrc"
 alias ga="git add --patch"
 alias ganpa="git add"
