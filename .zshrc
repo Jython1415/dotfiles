@@ -132,4 +132,10 @@ alias sep="pip list | grep"
 # Navigation
 alias ..="cd .."
 alias cd-research="cd ~/Documents/_research-assistant/zoll-repo-1"
+
+# grep
+alias default-grep='grep'
+alias grep='grep --color=auto --exclude-dir={.git,.venv,__pycache__,renv}'
+alias egrep='grep -E'
+alias fgrep='grep -F'
 # <<< Personal Convenience Aliases <<<
