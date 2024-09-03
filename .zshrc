@@ -113,13 +113,19 @@ export PATH="/Library/TeX/texbin:$PATH"
 # raco for Magic Racket in VSCode
 export PATH="/Applications/Racket v8.11.1/bin:$PATH"
 
-# Convenience
+# >>> Personal Convenience Aliases >>>
+# Misc.
 alias c="clear"
 alias reload="source ~/.zshrc"
+alias sea="alias | grep"
+alias sizes="du -sch *"
+alias sln="ln -s"
+
+# Git
 alias ga="git add --patch"
 alias ganpa="git add"
 alias gwdf="git-with-disabled-filter"
-alias sea="alias | grep"
+
+# Python
 alias sep="pip list | grep"
-alias sizes="du -sch *"
-alias sln="ln -s"
+# <<< Personal Convenience Aliases <<<
