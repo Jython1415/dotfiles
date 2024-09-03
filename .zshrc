@@ -89,19 +89,10 @@ export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/Joshua/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/Joshua/Downloads/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/Joshua/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/Joshua/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
-
+# Node Version Manager
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-
-# Load Angular CLI autocompletion.
-source <(ng completion script)
 
 # >>> VSCode venv deactivate hook >>>
 source ~/.vscode-python/deactivate
@@ -109,7 +100,8 @@ source ~/.vscode-python/deactivate
 
 # git executable
 alias git='/opt/homebrew/bin/git'
-alias gbc="git branch --merged | egrep -v \"(^\*|main|master)\" | xargs -r git branch -d"
+
+# Set default options for `less`
 export LESS=FRX
 
 # Created by `pipx` on 2023-11-12 17:51:42
