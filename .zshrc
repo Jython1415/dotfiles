@@ -125,6 +125,7 @@ alias sln="ln -s"
 alias ga="git add --patch"
 alias ganpa="git add"
 alias gwdf="git-with-disabled-filter"
+alias gswt="git switch --track"
 
 alias ghostscript="/usr/local/bin/gs"
 alias gs="gss"
