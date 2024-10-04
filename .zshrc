@@ -142,4 +142,9 @@ alias default-grep='grep'
 alias grep='grep --color=auto --exclude-dir={.git,.venv,__pycache__,renv}'
 alias egrep='grep -E'
 alias fgrep='grep -F'
+
+# Docker
+alias dcb='docker-compose build'
+alias dcu='docker-compose up'
+alias dcd='docker-compose down'
 # <<< Personal Convenience Aliases <<<
