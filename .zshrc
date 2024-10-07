@@ -116,6 +116,7 @@ export PATH="/Applications/Racket v8.11.1/bin:$PATH"
 # >>> Personal Convenience Aliases >>>
 # Misc.
 alias c="clear"
+alias t="type"
 alias reload="source ~/.zshrc"
 alias sea="alias | grep"
 alias sizes="du -sch *"
