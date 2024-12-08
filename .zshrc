@@ -113,6 +113,9 @@ export PATH="/Library/TeX/texbin:$PATH"
 # raco for Magic Racket in VSCode
 export PATH="/Applications/Racket v8.11.1/bin:$PATH"
 
+# rbenv initialization
+eval "$(rbenv init -)"
+
 # >>> Personal Convenience Aliases >>>
 # Misc.
 alias c="clear"
