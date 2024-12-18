@@ -128,7 +128,6 @@ alias sln="ln -s"
 # Git
 alias ga="git add --patch"
 alias ganpa="git add"
-alias gwdf="git-with-disabled-filter"
 alias gswt="git switch --track"
 alias glon="git log --oneline -n"
 
