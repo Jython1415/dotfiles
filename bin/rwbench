@@ -1,0 +1,52 @@
+#!/usr/bin/env zsh --no-rcs
+
+# Check if volume path argument is provided
+if [[ -z "$1" ]]; then
+    echo "Usage: $0 <path-to-volume>"
+    exit 1
+fi
+
+# Validate the provided path
+if [[ ! -d "$1" ]]; then
+    echo "Error: '$1' is not a valid directory or does not exist."
+    exit 1
+fi
+
+# Define test file path and size
+VOLUME_PATH="$1"
+TEST_FILE="$(mktemp "$VOLUME_PATH/testfile.XXXXXX.tmp")"
+TEST_SIZE="4096"  # Size in MiB (4GB)
+
+# Function to clean up the test file
+function cleanup() {
+    if [[ -f "$TEST_FILE" ]]; then
+        echo "Cleaning up test file..."
+        rm -f "$TEST_FILE"
+    fi
+}
+
+# Set up traps to ensure cleanup
+trap cleanup EXIT         # Run cleanup on script exit
+trap cleanup INT TERM HUP # Run cleanup on interruption (Ctrl+C, termination, or hangup)
+
+# Function to run dd and extract speed in MB/s
+function run_dd_test() {
+    local direction=$1  # "write" or "read"
+    local dd_command=$2
+    echo "Running $direction test..."
+
+    # Run dd, extract speed in bytes/sec, and convert to MB/s
+    SPEED=$(eval "$dd_command" 2>&1 | \
+        awk '/bytes\/sec/ {gsub(/[^0-9]/, "", $(NF-1)); printf "%.2f", $(NF-1) / 1048576}')
+    
+    echo "$direction speed: $SPEED MB/s"
+}
+
+# Perform write test
+run_dd_test "write" "dd if=/dev/zero of='$TEST_FILE' bs=1m count=$TEST_SIZE"
+
+# Perform read test
+run_dd_test "read" "dd if='$TEST_FILE' of=/dev/null bs=1m"
+
+echo "Benchmark completed."
+
