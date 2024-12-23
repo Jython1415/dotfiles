@@ -116,12 +116,13 @@ export PATH="/Applications/Racket v8.11.1/bin:$PATH"
 # rbenv initialization
 eval "$(rbenv init -)"
 
-# >>> Personal Convenience Aliases >>>
+# >>> Personal Convenience Aliases and Functions >>>
 # Misc.
 alias c="clear"
 alias t="type"
 alias reload="source ~/.zshrc"
 alias sea="alias | grep"
+getalias() { alias "$1" | awk -F'=' '{print $2}' | sed "s/^'//;s/'$//" }
 alias sizes="du -sch *"
 
 # Network
@@ -152,4 +153,4 @@ alias fgrep='grep -F'
 alias dcb='docker-compose build'
 alias dcu='docker-compose up'
 alias dcd='docker-compose down'
-# <<< Personal Convenience Aliases <<<
+# <<< Personal Convenience Aliases and Functions <<<
