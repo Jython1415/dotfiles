@@ -124,6 +124,9 @@ alias reload="source ~/.zshrc"
 alias sea="alias | grep"
 alias sizes="du -sch *"
 
+# Network
+alias getip="curl -s -w '\n' ifconfig.me/ip"
+
 # Git
 alias ga="git add --patch"
 alias ganpa="git add"
