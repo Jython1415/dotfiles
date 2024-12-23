@@ -123,7 +123,6 @@ alias t="type"
 alias reload="source ~/.zshrc"
 alias sea="alias | grep"
 alias sizes="du -sch *"
-alias sln="ln -s"
 
 # Git
 alias ga="git add --patch"
