@@ -127,6 +127,7 @@ alias reload="source ~/.zshrc"
 alias sea="alias | grep"
 getalias() { alias "$1" | awk -F'=' '{print $2}' | sed "s/^'//;s/'$//" }
 alias sizes="du -sch *"
+alias caff="caffeinate"
 
 # Network
 alias getip="curl -s -w '\n' ifconfig.me/ip"
