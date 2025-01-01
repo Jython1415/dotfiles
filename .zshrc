@@ -96,7 +96,9 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # >>> VSCode venv deactivate hook >>>
-source ~/.vscode-python/deactivate
+if [ -f ~/.vscode-python/deactivate ]; then
+    source ~/.vscode-python/deactivate
+fi
 # <<< VSCode venv deactivate hook <<<
 
 # git executable
