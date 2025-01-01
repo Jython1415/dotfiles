@@ -136,7 +136,7 @@ alias ga="git add --patch"
 alias ganpa="git add"
 alias gswt="git switch --track"
 alias glon="git log --oneline -n"
-
+# Remapping "gs" because I keep using it accidentally
 alias ghostscript="/usr/local/bin/gs"
 alias gs="gss"
 
