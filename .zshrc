@@ -124,7 +124,6 @@ eval "$(rbenv init -)"
 alias c="clear"
 alias t="type"
 alias reload="source ~/.zshrc"
-alias sea="alias | grep"
 getalias() { alias "$1" | awk -F'=' '{print $2}' | sed "s/^'//;s/'$//" }
 alias sizes="du -sch *"
 alias caff="caffeinate"
@@ -140,9 +139,6 @@ alias glon="git log --oneline -n"
 
 alias ghostscript="/usr/local/bin/gs"
 alias gs="gss"
-
-# Python
-alias sep="pip list | grep"
 
 # Navigation
 alias ..="cd .."
