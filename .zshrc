@@ -5,7 +5,7 @@ export PATH=$HOME/bin:/usr/local/bin:$HOME/.dotfiles/bin:$PATH
 export ZSH="$HOME/.oh-my-zsh"
 
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="bira"
+ZSH_THEME="joshua"
 
 # Uncomment one of the following lines to change the auto-update behavior
 # zstyle ':omz:update' mode disabled  # disable automatic updates
