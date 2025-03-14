@@ -12,3 +12,15 @@ set clipboard=unnamed      " Use system clipboard for yanking and pasting
 " Cursor shape configuration
 let &t_SI = "\e[6 q"       " Use vertical bar cursor in insert mode
 let &t_EI = "\e[2 q"       " Use block cursor in normal mode
+
+" Plugins with Vim-Plug
+call plug#begin()
+
+Plug 'ayu-theme/ayu-vim'
+
+call plug#end()
+
+" Theme
+set termguicolors
+let ayucolor="mirage"
+colorscheme ayu
