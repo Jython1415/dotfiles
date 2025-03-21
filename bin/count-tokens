@@ -1,0 +1,45 @@
+#!/usr/bin/env uv run --script
+# /// script
+# requires-python = ">=3.9"
+# dependencies = [
+#     "tiktoken",
+# ]
+# ///
+import sys
+import argparse
+import tiktoken
+
+def count_tokens(text, model="cl100k_base"):
+    """
+    Count tokens in text using the specified encoding model.
+    cl100k_base is the encoding used by Claude and GPT-4.
+    """
+    encoding = tiktoken.get_encoding(model)
+    tokens = encoding.encode(text)
+    return len(tokens)
+
+def main():
+    parser = argparse.ArgumentParser(description='Count tokens for LLM input')
+    parser.add_argument('--model', '-m', default='cl100k_base',
+                        help='Encoding model to use (default: cl100k_base)')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                        help='Show detailed output with context window percentages')
+    parser.add_argument('file', nargs='?', type=argparse.FileType('r'), default=sys.stdin,
+                        help='File to count tokens in (default: stdin)')
+    
+    args = parser.parse_args()
+    
+    text = args.file.read()
+    token_count = count_tokens(text, args.model)
+    
+    if args.verbose:
+        print(f"Token count: {token_count}")
+        print(f"Approximate percentage of context window:")
+        print(f"- Claude 3.7 Sonnet (200K): {token_count/200000*100:.2f}%")
+        print(f"- GPT-4 (128K): {token_count/128000*100:.2f}%")
+        print(f"- GPT-3.5 (16K): {token_count/16000*100:.2f}%")
+    else:
+        print(token_count)
+
+if __name__ == "__main__":
+    main()
