@@ -86,6 +86,10 @@ if ! command -v uv &> /dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
+# Install tools with uv
+log "Installing tools with uv..."
+uv tool install files-to-prompt
+
 # Install Oh My Zsh
 log "Checking for Oh My Zsh..."
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
