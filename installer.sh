@@ -89,6 +89,7 @@ fi
 # Install tools with uv
 log "Installing tools with uv..."
 uv tool install files-to-prompt
+uv tool install ttok
 
 # Install Oh My Zsh
 log "Checking for Oh My Zsh..."
