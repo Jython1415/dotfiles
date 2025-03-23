@@ -56,6 +56,11 @@ HIST_STAMPS="yyyy-mm-dd"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git virtualenv dirhistory)
 
+# TODO get git info working without having to disable async updates
+# - I changed this because git status info was not being included ih the prompt
+# - https://claude.ai/chat/a7bde7d6-a233-463a-a795-8d6914a46ca2
+zstyle ':omz:alpha:lib:git' async-prompt "false"
+
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
