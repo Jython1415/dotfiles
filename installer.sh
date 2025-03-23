@@ -62,9 +62,37 @@ else
     eval "$(/usr/local/bin/brew shellenv)"
 fi
 
-# Install common CLI tools
-log "Installing essential CLI tools..."
-brew install fd ripgrep jq tree git-lfs
+# Brew installs
+# Function to install and verify a Homebrew package
+install_brew_package() {
+    local package=$1
+    
+    log "Installing $package..."
+    if brew ls --versions "$package" &>/dev/null; then
+        log "$package is already installed."
+    else
+        brew install "$package"
+        
+        # Refresh PATH to ensure the tool is accessible
+        if [[ $(uname -m) == "arm64" ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        else
+            eval "$(/usr/local/bin/brew shellenv)"
+        fi
+        
+        # Verify installation
+        if ! command -v "$package" &>/dev/null; then
+            log "Warning: $package was installed but may not be in PATH yet."
+        else
+            log "$package installed and available."
+        fi
+    fi
+}
+install_brew_package "fd"
+install_brew_package "ripgrep"
+install_brew_package "jq"
+install_brew_package "tree"
+install_brew_package "git-lfs"
 
 # Install Python via pyenv
 log "Checking for pyenv..."
