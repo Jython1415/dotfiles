@@ -38,8 +38,8 @@ RPROMPT=""
 # Git prompt styling
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg[blue]%}git:%{$fg[magenta]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$fg[blue]%}%{$reset_color%}"
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[white]%}✗%{$reset_color%}"
-ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[green]%}✓%{$reset_color%}"
+ZSH_THEME_GIT_PROMPT_DIRTY="%{$reset_color%}🔴️"
+ZSH_THEME_GIT_PROMPT_CLEAN="%{$reset_color%}🟩️"
 
 # Python virtual environment styling
 ZSH_THEME_VIRTUAL_ENV_PROMPT_PREFIX="%{$fg[blue]%}venv:%{$fg[cyan]%}"
