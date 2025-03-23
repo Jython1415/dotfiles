@@ -119,6 +119,37 @@ log "Installing tools with uv..."
 uv tool install files-to-prompt
 uv tool install ttok
 
+# Install nvm and node
+log "Checking for nvm..."
+if [ -d "$HOME/.nvm" ]; then
+    log "NVM directory exists, attempting to load NVM..."
+    export NVM_DIR="$HOME/.nvm"
+    # Source nvm script to make the function available
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    # Verify nvm function is available
+    if type nvm &>/dev/null; then
+        log "NVM loaded successfully"
+    else
+        error "NVM directory exists but function could not be loaded"
+    fi
+else
+    log "Installing nvm..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+fi
+
+# Install node
+log "Checking for node..."
+if ! command -v node &> /dev/null; then
+    log "Installing node..."
+    if type nvm &>/dev/null; then
+        nvm install node
+    else
+        error "Cannot install node: NVM function is not available"
+    fi
+fi
+
 # Install Oh My Zsh
 log "Checking for Oh My Zsh..."
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
