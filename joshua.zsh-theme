@@ -4,7 +4,7 @@
 local time_display="%{$fg[white]%}[%*]%{$reset_color%}"
 
 # Get return code - show on error
-local return_code="%(?..%{$fg[red]%}[%?]%{$reset_color%} )"
+local return_code="%(?.. %{$fg[red]%}[%?]%{$reset_color%} )"
 
 # Username and hostname
 local user_host="%{$fg[cyan]%}%n%{$reset_color%} @ %{$fg[green]%}%m%{$reset_color%}"
@@ -23,7 +23,7 @@ local git_info='$(git_prompt_wrapper)'
 env_prompt_wrapper() {
     local venv="$(virtualenv_prompt_info)"
     local conda="$(conda_prompt_info)"
-    [[ -n "$venv$conda" ]] & echo " $venv$conda"
+    [[ -n "$venv$conda" ]] && echo " $venv$conda"
 }
 local env_info='$(env_prompt_wrapper)'
 
