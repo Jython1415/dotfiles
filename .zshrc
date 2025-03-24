@@ -149,6 +149,7 @@ alias gs="gss"
 alias ..="cd .."
 
 # grep
+alias rgm='tgrep -s rg -m'
 alias default-grep='grep'
 alias grep='grep --color=auto --exclude-dir={.git,.venv,__pycache__,renv}'
 alias egrep='grep -E'
