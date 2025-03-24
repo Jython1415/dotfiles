@@ -150,6 +150,34 @@ if ! command -v node &> /dev/null; then
     fi
 fi
 
+# Install rust, cargo
+log "Checking for cargo..."
+if command -v cargo &> /dev/null; then
+    log "cargo is already available"
+else
+    log "Installing rust and cargo..."
+    # Download and run the rustup installer script
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    # Update the current shell environment without needing to restart
+    source "$HOME/.cargo/env"
+
+    # Verify Cargo installation
+    if command -v cargo &> /dev/null; then
+        log "Cargo installation verified successfully"
+    else
+        error "Cargo was not found in PATH after installation. You may need to restart your terminal and run this script again."
+    fi
+fi
+
+# Version check to ensure cargo is working properly
+if ! cargo --version &> /dev/null; then
+    error "Cargo is installed but not functioning properly. Please check your Rust installation."
+fi
+
+# Install tools with cargo
+log "Installing Rust tools..."
+cargo install treegrep
+
 # Install Oh My Zsh
 log "Checking for Oh My Zsh..."
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
