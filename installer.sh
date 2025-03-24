@@ -118,6 +118,8 @@ fi
 log "Installing tools with uv..."
 uv tool install files-to-prompt
 uv tool install ttok
+uv tool install llm --python3.12 # TODO make sure Python3.12 is available
+uv tool install black
 
 # Install nvm and node
 log "Checking for nvm..."
