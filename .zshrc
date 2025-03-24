@@ -150,10 +150,11 @@ alias ..="cd .."
 
 # grep
 alias rgm='tgrep -s rg -m'
-alias default-grep='grep'
-alias grep='grep --color=auto --exclude-dir={.git,.venv,__pycache__,renv}'
-alias egrep='grep -E'
-alias fgrep='grep -F'
+# TODO fix grep aliases so grep is just default grep
+# alias default-grep='grep'
+# alias grep='grep --color=auto --exclude-dir={.git,.venv,__pycache__,renv}'
+# alias egrep='grep -E'
+# alias fgrep='grep -F'
 
 # Docker
 alias dcb='docker-compose build'
