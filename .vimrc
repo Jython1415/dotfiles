@@ -30,6 +30,13 @@ autocmd FileType python setlocal
     \ fileformat=unix
     \ colorcolumn=80 " For PEP8
 
+" Markdown-specific settings
+autocmd FileType markdown setlocal
+    \ tabstop=2
+    \ softtabstop=2
+    \ shiftwidth=2
+    \ expandtab
+
 " Plugins with Vim-Plug
 call plug#begin()
 
