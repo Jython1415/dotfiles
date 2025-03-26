@@ -19,23 +19,32 @@ set nowritebackup
 let &t_SI = "\e[6 q"       " Use vertical bar cursor in insert mode
 let &t_EI = "\e[2 q"       " Use block cursor in normal mode
 
-" Python-specific settings
-autocmd FileType python setlocal
-    \ tabstop=4
-    \ softtabstop=4
-    \ shiftwidth=4
-    \ textwidth=79
-    \ expandtab
-    \ autoindent
-    \ fileformat=unix
-    \ colorcolumn=80 " For PEP8
+" Filetype-specific settings
+" Enable filetype detection
+filetype plugin indent on
+" Settings
+augroup filetype_settings
+  autocmd!
 
-" Markdown-specific settings
-autocmd FileType markdown setlocal
-    \ tabstop=2
-    \ softtabstop=2
-    \ shiftwidth=2
-    \ expandtab
+  " Python settings
+  autocmd FileType python setlocal
+      \ tabstop=4
+      \ softtabstop=4
+      \ shiftwidth=4
+      \ textwidth=79
+      \ expandtab
+      \ autoindent
+      \ fileformat=unix
+      \ colorcolumn=80 " For PEP8
+
+  " Markdown settings
+  autocmd FileType markdown setlocal
+      \ tabstop=2
+      \ softtabstop=2
+      \ shiftwidth=2
+      \ expandtab
+      \ autoindent
+augroup END
 
 " Plugins with Vim-Plug
 call plug#begin()
