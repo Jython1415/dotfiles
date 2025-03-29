@@ -107,6 +107,22 @@ if ! command -v pyenv &> /dev/null; then
     pyenv global $LATEST_VERSION
 fi
 
+# Ensure Python 3.12 is available
+log "Checking for Python 3.12..."
+if ! pyenv versions | rg -q "3\.12"; then
+    # Try to find latest 3.12.x version
+    PYTHON_312_VERSION=$(pyenv install --list | rg -o "^\s*3\.12\.\d+$" | rg -v "a|b|rc|dev|t" | tail -1 | xargs)
+
+    if [ -n "$PYTHON_312_VERSION" ]; then
+        log "Installing Python $PYTHON_312_VERSION for compatibility with llm tool..."
+        pyenv install $PYTHON_312_VERSION
+    else
+        log "Warning: No Python 3.12.x version found in available versions. The llm tool may fail to install."
+    fi
+else
+    log "Python 3.12 is already installed"
+fi
+
 # Install uv if not present
 log "Checking for uv..."
 if ! command -v uv &> /dev/null; then
@@ -118,8 +134,8 @@ fi
 log "Installing tools with uv..."
 uv tool install files-to-prompt
 uv tool install ttok
-uv tool install llm --python3.12 # TODO make sure Python3.12 is available
 uv tool install strip-tags
+uv tool install llm --python 3.12
 uv tool install black
 
 # Install nvm and node
