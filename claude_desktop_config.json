@@ -11,6 +11,17 @@
       "restrictions": {
         "allowedExtensions": [".md"]
       }
+    },
+    "memory": {
+      "command": "/Users/Joshua/.local/bin/uvx",
+      "args": [
+        "--refresh",
+        "--quiet",
+        "mcp-memory-py"
+      ],
+      "env": {
+        "MEMORY_FILE_PATH": "/Users/Joshua/Documents/_personal/ai-therapy/memory.json"
+      }
     }
   }
 }
