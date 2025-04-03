@@ -13,3 +13,11 @@ curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
 
 I ran `:PlugInstall` in Vim afterwards to install the packages.
 
+## Claude Desktop
+
+The `claude_desktop_config.json` file needs to be manually symlinked to its correct location in `Application Support/Claude`.
+
+```bash
+ln -s ~/.dotfiles/claude_desktop_config.json ~/Library/Application\ Support/Claude/claude_desktop_config.json
+```
+

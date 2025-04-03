@@ -1,0 +1,16 @@
+{
+  "globalShortcut": "",
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/Joshua/Documents/obsidian-main-vault/3 Active Directories/Job Search"
+      ],
+      "restrictions": {
+        "allowedExtensions": [".md"]
+      }
+    }
+  }
+}
