@@ -169,6 +169,35 @@ if ! command -v node &> /dev/null; then
     fi
 fi
 
+# Install Deno
+log "Checking for Deno..."
+if ! command -v deno &> /dev/null; then
+    log "Installing Deno..."
+
+    # Set DENO_INSTALL to ensure it's installed in the expected location
+    export DENO_INSTALL="$HOME/.deno"
+
+    # Install Deno with -y and --no-modify-path flags to:
+    # 1. Skip interactive prompts (-y)
+    # 2. Avoid modifying PATH (--no-modify-path) since we already have it in .zshrc
+    curl -fsSL https://deno.land/install.sh | sh -s -- -y --no-modify-path
+
+    # Verify installation
+    if ! command -v deno &> /dev/null; then
+        # Try using the direct path if the command isn't found in PATH
+        if [ -f "$DENO_INSTALL/bin/deno" ]; then
+            log "Deno installed at $DENO_INSTALL/bin/deno but not in PATH yet."
+            log "Your current terminal session may need to be restarted to use deno."
+        else
+            error "Deno installation failed. Please check the logs and try again."
+        fi
+    else
+        log "Deno installed and available in PATH."
+    fi
+else
+    log "Deno is already installed."
+fi
+
 # Install rust, cargo
 log "Checking for cargo..."
 if command -v cargo &> /dev/null; then

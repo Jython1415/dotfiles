@@ -124,6 +124,9 @@ export PATH="/Applications/Racket v8.11.1/bin:$PATH"
 # rbenv initialization
 eval "$(rbenv init -)"
 
+# deno setup
+. "/Users/Joshua/.deno/env"
+
 # >>> Personal Convenience Aliases and Functions >>>
 # Misc.
 alias c="clear"
