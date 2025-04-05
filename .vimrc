@@ -43,6 +43,14 @@ augroup filetype_settings
       \ shiftwidth=2
       \ expandtab
       \ autoindent
+
+  " JSON settings
+  autocmd FileType JSON setlocal
+      \ tabstop=2
+      \ softtabstop=2
+      \ shiftwidth=2
+      \ expandtab
+      \ autoindent
 augroup END
 
 " Plugins with Vim-Plug
