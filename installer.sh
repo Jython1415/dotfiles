@@ -137,6 +137,7 @@ uv tool install ttok
 uv tool install strip-tags
 uv tool install llm --python 3.12
 uv tool install black
+uv tool install "huggingface_hub[cli]"
 
 # Install nvm and node
 log "Checking for nvm..."
