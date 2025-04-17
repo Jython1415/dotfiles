@@ -1,0 +1,14 @@
+#!/usr/bin/env zsh
+
+# Function to switch between ZSH themes
+if [[ "$1" == "minimal" ]]; then
+  sed -i "" 's/^ZSH_THEME=".*"/ZSH_THEME="joshua-minimal"/' "$HOME/.dotfiles/.zshrc"
+  echo "Switched to minimal theme. Reload your shell with 'source ~/.zshrc'"
+elif [[ "$1" == "full" ]]; then
+  sed -i "" 's/^ZSH_THEME=".*"/ZSH_THEME="joshua"/' "$HOME/.dotfiles/.zshrc"
+  echo "Switched to full theme. Reload your shell with 'source ~/.zshrc'"
+else
+  echo "Usage: theme-switch [minimal|full]"
+  echo "  minimal: Switch to minimal theme (just red $)"
+  echo "  full: Switch to full theme (your regular prompt)"
+fi

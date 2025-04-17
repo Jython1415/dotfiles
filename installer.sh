@@ -244,9 +244,11 @@ fi
 # Create symlinks
 log "Creating symlinks..."
 
-# Symlink zsh theme
+# Symlink zsh themes
 mkdir -p "$HOME/.oh-my-zsh/custom/themes"
-ln -sf "$DOTFILES_DIR/joshua.zsh-theme" "$HOME/.oh-my-zsh/custom/themes/joshua.zsh-theme" 
+ln -sf "$DOTFILES_DIR/joshua.zsh-theme" "$HOME/.oh-my-zsh/custom/themes/joshua.zsh-theme"
+ln -sf "$DOTFILES_DIR/joshua-minimal.zsh-theme" "$HOME/.oh-my-zsh/custom/themes/joshua-minimal.zsh-theme"
+log "Regular and minimal themes symlinked successfully"
 
 # Symlink dotfiles
 ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
