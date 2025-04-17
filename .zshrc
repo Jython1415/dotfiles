@@ -133,7 +133,22 @@ eval "$(rbenv init -)"
 
 # >>> Personal Convenience Aliases and Functions >>>
 # Misc.
-alias c="clear"
+# Function to run clear with confirmation
+clear_with_confirmation() {
+  if [[ "$1" == "-y" ]]; then
+    command clear
+  else
+    echo -n "Are you sure you want to clear the screen? (y/n): "
+    read response
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+      command clear
+    fi
+  fi
+}
+
+# Clear screen commands with confirmation
+alias c='clear_with_confirmation'
+alias clear='clear_with_confirmation'
 alias t="type"
 alias reload="source ~/.zshrc"
 getalias() { alias "$1" | awk -F'=' '{print $2}' | sed "s/^'//;s/'$//" }
