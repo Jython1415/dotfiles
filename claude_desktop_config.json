@@ -6,11 +6,9 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/Joshua/Documents/obsidian-main-vault/3 Active Directories/Job Search"
-      ],
-      "restrictions": {
-        "allowedExtensions": [".md"]
-      }
+        "/Users/Joshua/Documents/obsidian-main-vault/3 Active Directories/Job Search",
+        "/Users/Joshua/.dotfiles"
+      ]
     },
     "memory": {
       "command": "/Users/Joshua/.local/bin/uvx",
