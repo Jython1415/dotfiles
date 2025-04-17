@@ -1,5 +1,5 @@
 {
-  "globalShortcut": "",
+  "globalShortcut": "Ctrl+Space",
   "mcpServers": {
     "filesystem": {
       "command": "npx",
