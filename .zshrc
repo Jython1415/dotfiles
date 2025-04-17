@@ -62,6 +62,10 @@ plugins=(git virtualenv dirhistory)
 zstyle ':omz:alpha:lib:git' async-prompt "false"
 
 source $ZSH/oh-my-zsh.sh
+# disable grep aliases
+unalias grep 2>/dev/null
+unalias egrep 2>/dev/null
+unalias fgrep 2>/dev/null
 
 # User configuration
 
@@ -154,11 +158,6 @@ alias ..="cd .."
 
 # grep
 alias rgm='tgrep -s rg -m'
-# TODO fix grep aliases so grep is just default grep
-# alias default-grep='grep'
-# alias grep='grep --color=auto --exclude-dir={.git,.venv,__pycache__,renv}'
-# alias egrep='grep -E'
-# alias fgrep='grep -F'
 
 # Docker
 alias dcb='docker-compose build'
