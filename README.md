@@ -21,3 +21,5 @@ The `claude_desktop_config.json` file needs to be manually symlinked to its corr
 ln -s ~/.dotfiles/claude_desktop_config.json ~/Library/Application\ Support/Claude/claude_desktop_config.json
 ```
 
+I also added a [`huggingface` MCP server](https://github.com/shreyaskarnik/huggingface-mcp-server) that is manually cloned to `~/Documents/_programming`
+

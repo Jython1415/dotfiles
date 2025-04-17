@@ -22,6 +22,15 @@
       "env": {
         "MEMORY_FILE_PATH": "/Users/Joshua/Documents/_personal/ai-therapy/memory.json"
       }
+    },
+    "huggingface": {
+      "command": "/Users/Joshua/.local/bin/uv",
+      "args": [
+        "--directory",
+        "/Users/Joshua/Documents/_programming/huggingface-mcp-server",
+        "run",
+        "huggingface"
+      ]
     }
   }
 }
