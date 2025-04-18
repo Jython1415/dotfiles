@@ -1,2 +1,4 @@
+.untracked/
 !.zshrc
 !.zshenv
+.*
