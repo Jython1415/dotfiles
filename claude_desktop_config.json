@@ -11,7 +11,8 @@
         "-y",
         "@modelcontextprotocol/server-filesystem",
         "/Users/Joshua/Documents/obsidian-main-vault/3 Active Directories/Job Search",
-        "/Users/Joshua/.dotfiles"
+        "/Users/Joshua/.dotfiles",
+        "/Users/Joshua/Library/Logs/Claude"
       ]
     },
     "huggingface": {
