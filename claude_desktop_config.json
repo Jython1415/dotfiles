@@ -29,6 +29,9 @@
         "run",
         "huggingface"
       ]
+    },
+    "run-python": {
+      "command": "/Users/Joshua/.dotfiles/bin/mcp-run-python-wrapper.sh"
     }
   }
 }
