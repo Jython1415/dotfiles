@@ -199,6 +199,32 @@ else
     log "Deno is already installed."
 fi
 
+# Install pnpm
+log "Checking for pnpm..."
+if ! command -v pnpm &> /dev/null; then
+    log "Installing pnpm..."
+    
+    # Install pnpm using the official installation script
+    curl -fsSL https://get.pnpm.io/install.sh | sh -
+    
+    # Set PNPM_HOME for this session to verify installation
+    export PNPM_HOME="$HOME/Library/pnpm"
+    case ":$PATH:" in
+      *":$PNPM_HOME:"*) ;;
+      *) export PATH="$PNPM_HOME:$PATH" ;;
+    esac
+    
+    # Verify installation
+    if ! command -v pnpm &> /dev/null; then
+        log "pnpm installed but not immediately available in PATH."
+        log "Your current terminal session may need to be restarted to use pnpm."
+    else
+        log "pnpm installed and available in PATH."
+    fi
+else
+    log "pnpm is already installed."
+fi
+
 # Install rust, cargo
 log "Checking for cargo..."
 if command -v cargo &> /dev/null; then

@@ -131,6 +131,14 @@ eval "$(rbenv init -)"
 # deno setup
 . "/Users/Joshua/.deno/env"
 
+# pnpm
+export PNPM_HOME="/Users/Joshua/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
 # >>> Personal Convenience Aliases and Functions >>>
 # Misc.
 # Function to run clear with confirmation
