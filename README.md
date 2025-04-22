@@ -64,11 +64,31 @@ Run `:PlugInstall` in Vim afterwards to install the packages.
 
 ## Claude Desktop
 
-The `claude_desktop_config.json` file needs to be manually symlinked to its correct location in `Application Support/Claude`.
+This setup uses a template-based approach for the Claude Desktop configuration to securely manage API credentials.
 
-```bash
-ln -s ~/.dotfiles/claude_desktop_config.json ~/Library/Application\ Support/Claude/claude_desktop_config.json
-```
+1. Create a `.env` file in the `~/.dotfiles/claude/` directory with your credentials:
+   ```bash
+   # ~/.dotfiles/claude/.env
+   BLUESKY_IDENTIFIER=your_bluesky_username
+   BLUESKY_APP_PASSWORD=your_bluesky_app_password
+   # Add any other environment variables needed for templates
+   ```
+
+2. Run the hydration script to generate the final configuration:
+   ```bash
+   cd ~/.dotfiles/claude
+   ./hydrate.py
+   ```
+
+3. The script will automatically populate the template with your environment variables and generate the final configuration file at `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+This approach allows you to keep sensitive credentials out of your git repository while still tracking the configuration template.
+
+### Requirements for Hydration Script
+
+The script requires:
+- Python 3.10+
+- Required packages: python-dotenv, jinja2 (installed automatically with uv)
 
 ## Utility Scripts
 
