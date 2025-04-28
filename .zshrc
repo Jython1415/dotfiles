@@ -139,6 +139,9 @@ case ":$PATH:" in
 esac
 # pnpm end
 
+# Go
+export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
+
 # >>> Personal Convenience Aliases and Functions >>>
 # Misc.
 # Function to run clear with confirmation
