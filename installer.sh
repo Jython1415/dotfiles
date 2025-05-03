@@ -93,6 +93,7 @@ install_brew_package "ripgrep"
 install_brew_package "jq"
 install_brew_package "tree"
 install_brew_package "git-lfs"
+install_brew_package "fzf"
 
 # Install Python via pyenv
 log "Checking for pyenv..."

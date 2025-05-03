@@ -142,6 +142,9 @@ esac
 # Go
 export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
 
+# fzf
+source <(fzf --zsh)
+
 # >>> Personal Convenience Aliases and Functions >>>
 # Misc.
 # Function to run clear with confirmation
@@ -181,6 +184,8 @@ alias gs="gss"
 
 # Navigation
 alias ..="cd .."
+alias cdf="cd \$(fd --type directory | fzf)"
+alias cdfa="cd \$(fd --type directory --hidden --no-ignore | fzf)"
 
 # grep
 alias rgm='tgrep -s rg -m'
