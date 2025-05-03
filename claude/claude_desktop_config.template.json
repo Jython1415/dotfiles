@@ -1,10 +1,6 @@
 {
   "globalShortcut": "Ctrl+Space",
   "mcpServers": {
-    "fetch": {
-      "command": "/Users/Joshua/.local/bin/uvx",
-      "args": ["mcp-server-fetch"]
-    },
     "filesystem": {
       "command": "npx",
       "args": [
