@@ -6,7 +6,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/Joshua/Documents/obsidian-main-vault/3 Active Directories/Job Search",
+        "/Users/Joshua/Documents/obsidian-main-vault",
         "/Users/Joshua/.dotfiles",
         "/Users/Joshua/Library/Logs/Claude",
         "/Users/Joshua/Documents/_programming"
