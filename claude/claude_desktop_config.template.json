@@ -1,6 +1,17 @@
 {
   "globalShortcut": "Ctrl+Space",
   "mcpServers": {
+    "deer-to-bsky": {
+      "command": "/Users/Joshua/.local/bin/uv",
+      "args": [
+        "run",
+        "--with",
+        "fastmcp",
+        "--with",
+        "pydantic",
+        "/Users/Joshua/Documents/_programming/simple-mcp-servers/deer_to_bsky.py"
+      ]
+    },
     "filesystem": {
       "command": "npx",
       "args": [
