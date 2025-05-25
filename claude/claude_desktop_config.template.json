@@ -1,5 +1,5 @@
 {
-  "globalShortcut": "Ctrl+Space",
+  "globalShortcut": "",
   "mcpServers": {
     "deer-to-bsky": {
       "command": "/Users/Joshua/.local/bin/uv",
