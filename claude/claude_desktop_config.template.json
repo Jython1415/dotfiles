@@ -54,6 +54,17 @@
         "BLUESKY_APP_PASSWORD": "{{ BLUESKY_APP_PASSWORD }}",
         "BLUESKY_SERVICE_URL": "https://bsky.social"
       }
+    },
+    "time-god": {
+      "command": "/Users/Joshua/.local/bin/uv",
+      "args": [
+        "run",
+        "--with",
+        "fastmcp",
+        "--with",
+        "pydantic",
+        "/Users/Joshua/Documents/_programming/simple-mcp-servers/time_god_mcp.py"
+      ]
     }
   }
 }
