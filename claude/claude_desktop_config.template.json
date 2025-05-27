@@ -32,6 +32,20 @@
         "/Users/Joshua/Documents/_programming"
       ]
     },
+    "google-maps": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GOOGLE_MAPS_API_KEY",
+        "mcp/google-maps"
+      ],
+      "env": {
+        "GOOGLE_MAPS_API_KEY": "{{ GOOGLE_MAPS_API_KEY }}"
+      }
+    },
     "huggingface": {
       "command": "/Users/Joshua/.local/bin/uv",
       "args": [
