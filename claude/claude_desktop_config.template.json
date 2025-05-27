@@ -26,10 +26,10 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/Joshua/Documents/obsidian-main-vault",
+        "/Users/Joshua/Documents",
+        "/Users/Joshua/Downloads",
         "/Users/Joshua/.dotfiles",
-        "/Users/Joshua/Library/Logs/Claude",
-        "/Users/Joshua/Documents/_programming"
+        "/Users/Joshua/Library/Logs/Claude"
       ]
     },
     "google-maps": {
