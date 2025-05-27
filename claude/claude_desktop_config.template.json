@@ -1,6 +1,15 @@
 {
   "globalShortcut": "",
   "mcpServers": {
+    "bluesky": {
+      "command": "node",
+      "args": ["/Users/Joshua/Documents/_programming/bsky-mcp-server/build/src/index.js"],
+      "env": {
+        "BLUESKY_IDENTIFIER": "{{ BLUESKY_IDENTIFIER }}",
+        "BLUESKY_APP_PASSWORD": "{{ BLUESKY_APP_PASSWORD }}",
+        "BLUESKY_SERVICE_URL": "https://bsky.social"
+      }
+    },
     "deer-to-bsky": {
       "command": "/Users/Joshua/.local/bin/uv",
       "args": [
@@ -45,15 +54,6 @@
     },
     "run-python": {
       "command": "/Users/Joshua/.dotfiles/bin/mcp-run-python-wrapper.sh"
-    },
-    "bluesky": {
-      "command": "node",
-      "args": ["/Users/Joshua/Documents/_programming/bsky-mcp-server/build/src/index.js"],
-      "env": {
-        "BLUESKY_IDENTIFIER": "{{ BLUESKY_IDENTIFIER }}",
-        "BLUESKY_APP_PASSWORD": "{{ BLUESKY_APP_PASSWORD }}",
-        "BLUESKY_SERVICE_URL": "https://bsky.social"
-      }
     },
     "time-god": {
       "command": "/Users/Joshua/.local/bin/uv",
