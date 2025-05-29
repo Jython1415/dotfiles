@@ -79,6 +79,14 @@
         "pydantic",
         "/Users/Joshua/Documents/_programming/simple-mcp-servers/time_god_mcp.py"
       ]
+    },
+    "youtube-transcript": {
+      "command": "/Users/Joshua/.local/bin/uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/jkawamoto/mcp-youtube-transcript",
+        "mcp-youtube-transcript"
+      ]
     }
   }
 }
