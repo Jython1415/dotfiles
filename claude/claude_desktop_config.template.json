@@ -52,6 +52,14 @@
         "huggingface"
       ]
     },
+    "large-file-reader": {
+      "command": "/Users/Joshua/.local/bin/uv",
+      "args": [
+        "run",
+        "--script",
+        "/Users/Joshua/Documents/_programming/simple-mcp-servers/large_file_reader_mcp.py"
+      ]
+    },
     "memory": {
       "command": "/Users/Joshua/.local/bin/uvx",
       "args": [
