@@ -14,10 +14,7 @@
       "command": "/Users/Joshua/.local/bin/uv",
       "args": [
         "run",
-        "--with",
-        "fastmcp",
-        "--with",
-        "pydantic",
+        "--script",
         "/Users/Joshua/Documents/_programming/simple-mcp-servers/deer_to_bsky.py"
       ]
     },
@@ -73,10 +70,7 @@
       "command": "/Users/Joshua/.local/bin/uv",
       "args": [
         "run",
-        "--with",
-        "fastmcp",
-        "--with",
-        "pydantic",
+        "--script",
         "/Users/Joshua/Documents/_programming/simple-mcp-servers/time_god_mcp.py"
       ]
     },
