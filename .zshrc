@@ -147,7 +147,7 @@ source <(fzf --zsh)
 
 # >>> Personal Convenience Aliases and Functions >>>
 # Misc.
-# Function to run clear with confirmation
+alias caff="caffeinate"
 clear_with_confirmation() {
   if [[ "$1" == "-y" ]]; then
     command clear
@@ -159,16 +159,14 @@ clear_with_confirmation() {
     fi
   fi
 }
-
-# Clear screen commands with confirmation
 alias c='clear_with_confirmation'
 alias clear='clear_with_confirmation'
-alias t="type"
-alias reload="source ~/.zshrc"
 getalias() { alias "$1" | awk -F'=' '{print $2}' | sed "s/^'//;s/'$//" }
-alias sizes="du -sch *"
-alias caff="caffeinate"
 alias mv='mv -i'
+alias reload="source ~/.zshrc"
+alias sizes="du -sch *"
+alias t="type"
+alias trim='python3 -c "import sys; print(sys.stdin.read().strip(), end=\"\")"'
 
 # Network
 alias getip="curl -s -w '\n' ifconfig.me/ip"
