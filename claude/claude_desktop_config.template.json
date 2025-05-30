@@ -43,6 +43,14 @@
         "GOOGLE_MAPS_API_KEY": "{{ GOOGLE_MAPS_API_KEY }}"
       }
     },
+    "github-repo": {
+      "command": "/Users/Joshua/.local/bin/uv",
+      "args": [
+        "run",
+        "--script",
+        "/Users/Joshua/Documents/_programming/simple-mcp-servers/github_repo_mcp.py"
+      ]
+    },
     "huggingface": {
       "command": "/Users/Joshua/.local/bin/uv",
       "args": [
