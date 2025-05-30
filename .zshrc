@@ -161,6 +161,7 @@ clear_with_confirmation() {
 }
 alias c='clear_with_confirmation'
 alias clear='clear_with_confirmation'
+alias cwd='pwd | trim | pbcopy'
 getalias() { alias "$1" | awk -F'=' '{print $2}' | sed "s/^'//;s/'$//" }
 alias mv='mv -i'
 alias reload="source ~/.zshrc"
