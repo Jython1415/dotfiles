@@ -29,13 +29,6 @@
         "/Users/Joshua/Library/Logs/Claude"
       ]
     },
-    "gitmcp": {
-      "command": "npx",
-      "args": [
-        "mcp-remote",
-        "https://gitmcp.io/docs"
-      ]
-    },
     "google-maps": {
       "command": "docker",
       "args": [
