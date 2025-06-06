@@ -145,6 +145,9 @@ export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
 # fzf
 source <(fzf --zsh)
 
+# Claude Code
+alias claude="/Users/Joshua/.claude/local/claude"
+
 # >>> Personal Convenience Aliases and Functions >>>
 # Misc.
 alias caff="caffeinate"
