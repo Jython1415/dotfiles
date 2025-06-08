@@ -82,6 +82,11 @@
     "run-python": {
       "command": "/Users/Joshua/.dotfiles/bin/mcp-run-python-wrapper.sh"
     },
+		"sequentialthinking-tools": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "mcp-sequentialthinking-tools"]
+		},
     "time-god": {
       "command": "/Users/Joshua/.local/bin/uv",
       "args": [
