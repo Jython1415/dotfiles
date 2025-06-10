@@ -1,0 +1,1 @@
+- Have to run `npx playwright install chromium` for `fetcher` tool
