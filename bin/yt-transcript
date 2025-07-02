@@ -1,0 +1,65 @@
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "youtube-transcript-api",
+# ]
+# ///
+
+import sys
+import json
+import re
+import argparse
+from youtube_transcript_api import YouTubeTranscriptApi
+
+def extract_video_id(url):
+    """Extract YouTube video ID from various URL formats"""
+    # If it's already just the ID (11 characters, alphanumeric and dashes/underscores)
+    if re.match(r'^[a-zA-Z0-9_-]{11}$', url):
+        return url
+    
+    # Extract from various YouTube URL formats
+    patterns = [
+        r'(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)([a-zA-Z0-9_-]{11})',
+        r'youtube\.com/watch\?.*v=([a-zA-Z0-9_-]{11})'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    
+    return None
+
+def main():
+    parser = argparse.ArgumentParser(description='Get YouTube video transcript')
+    parser.add_argument('url', help='YouTube URL or video ID')
+    parser.add_argument('--raw', action='store_true', 
+                       help='Output full JSON with duration and timestamps')
+    
+    args = parser.parse_args()
+    
+    # Extract video ID
+    video_id = extract_video_id(args.url)
+    if not video_id:
+        print(f"Error: Invalid YouTube URL or video ID: {args.url}", file=sys.stderr)
+        sys.exit(1)
+    
+    try:
+        # Get transcript
+        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        
+        if args.raw:
+            # Output full JSON
+            print(json.dumps(transcript, indent=2))
+        else:
+            # Output just the text
+            for entry in transcript:
+                print(entry['text'])
+                
+    except Exception as e:
+        print(f"Error fetching transcript: {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
