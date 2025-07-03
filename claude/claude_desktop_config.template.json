@@ -83,6 +83,17 @@
         "MEMORY_FILE_PATH": "/Users/Joshua/Documents/_personal/ai-therapy/memory.json"
       }
     },
+    "obsidian-vault": {
+      "command": "/Users/Joshua/.local/bin/uv",
+      "args": [
+        "run",
+        "--script",
+        "/Users/Joshua/Documents/_programming/simple-mcp-servers/obsidian_vault_mcp.py"
+      ],
+      "env": {
+        "OBSIDIAN_VAULT_PATH": "/Users/Joshua/Documents/obsidian-main-vault"
+      }
+    },
 		"sequentialthinking-tools": {
 			"type": "stdio",
 			"command": "npx",
