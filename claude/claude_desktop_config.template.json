@@ -18,10 +18,6 @@
         "/Users/Joshua/Documents/_programming/simple-mcp-servers/deer_to_bsky.py"
       ]
     },
-    "fetcher": {
-      "command": "npx",
-      "args": ["-y", "fetcher-mcp"]
-    },
     "filesystem": {
       "command": "npx",
       "args": [
