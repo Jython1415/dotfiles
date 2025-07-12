@@ -62,14 +62,6 @@
         "OBSIDIAN_VAULT_PATH": "/Users/Joshua/Documents/obsidian-main-vault"
       }
     },
-    "time-god": {
-      "command": "/Users/Joshua/.local/bin/uv",
-      "args": [
-        "run",
-        "--script",
-        "/Users/Joshua/Documents/_programming/simple-mcp-servers/time_god_mcp.py"
-      ]
-    },
     "youtube-transcript": {
       "command": "/Users/Joshua/.local/bin/uvx",
       "args": [
