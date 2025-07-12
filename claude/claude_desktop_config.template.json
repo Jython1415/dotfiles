@@ -82,11 +82,6 @@
         "OBSIDIAN_VAULT_PATH": "/Users/Joshua/Documents/obsidian-main-vault"
       }
     },
-		"sequentialthinking-tools": {
-			"type": "stdio",
-			"command": "npx",
-			"args": ["-y", "mcp-sequentialthinking-tools"]
-		},
     "time-god": {
       "command": "/Users/Joshua/.local/bin/uv",
       "args": [
