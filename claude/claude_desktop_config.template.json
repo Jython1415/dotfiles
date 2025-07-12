@@ -43,15 +43,6 @@
         "GOOGLE_MAPS_API_KEY": "{{ GOOGLE_MAPS_API_KEY }}"
       }
     },
-    "huggingface": {
-      "command": "/Users/Joshua/.local/bin/uv",
-      "args": [
-        "--directory",
-        "/Users/Joshua/Documents/_programming/huggingface-mcp-server",
-        "run",
-        "huggingface"
-      ]
-    },
     "large-file-reader": {
       "command": "/Users/Joshua/.local/bin/uv",
       "args": [
