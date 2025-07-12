@@ -51,17 +51,6 @@
         "/Users/Joshua/Documents/_programming/simple-mcp-servers/large_file_reader_mcp.py"
       ]
     },
-    "memory": {
-      "command": "/Users/Joshua/.local/bin/uvx",
-      "args": [
-        "--refresh",
-        "--quiet",
-        "mcp-memory-py"
-      ],
-      "env": {
-        "MEMORY_FILE_PATH": "/Users/Joshua/Documents/_personal/ai-therapy/memory.json"
-      }
-    },
     "obsidian-vault": {
       "command": "/Users/Joshua/.local/bin/uv",
       "args": [
