@@ -171,11 +171,6 @@ alias mv='mv -i'
 alias reload="source ~/.zshrc"
 alias sizes="du -sch *"
 alias t="type"
-tcd() {
-    local dir="$1"
-    shift
-    pushd "$dir" > /dev/null && "$@" && popd > /dev/null
-}
 alias trim='python3 -c "import sys; print(sys.stdin.read().strip(), end=\"\")"'
 
 # Network
