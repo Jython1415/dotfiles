@@ -1,0 +1,176 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "pandas>=2.0.0",
+#     "python-calamine>=0.4.0",
+# ]
+# ///
+
+import argparse
+import os
+import sys
+import pandas as pd
+from pathlib import Path
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Extract table data from xlsx files as TSV",
+        epilog="""Examples:
+  xlcat                          # Most recent xlsx in current directory
+  xlcat | pbcopy                 # Most recent xlsx to clipboard  
+  xlcat -d ~/Downloads           # Most recent xlsx in Downloads
+  xlcat report.xlsx              # Specific file
+  xlcat data.xlsx --sheet Data   # Specific file and sheet""",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    parser.add_argument(
+        "file", 
+        nargs="?", 
+        help="Specific xlsx file (if not provided, finds most recent in directory)"
+    )
+    parser.add_argument(
+        "-d", "--dir", 
+        default=".",
+        help="Directory to search for xlsx files (default: current directory)"
+    )
+    parser.add_argument(
+        "--no-header", 
+        action="store_true", 
+        help="Skip header row in output"
+    )
+    parser.add_argument(
+        "--sheet", 
+        help="Specific sheet name to extract (bypasses single-sheet check)"
+    )
+    parser.add_argument(
+        "--delimiter", 
+        default="\t", 
+        help="Output delimiter (default: tab)"
+    )
+    
+    args = parser.parse_args()
+    
+    try:
+        # Determine which file to process
+        if args.file:
+            target_file = Path(args.file)
+        else:
+            target_file = find_most_recent_xlsx(Path(args.dir))
+            if not target_file:
+                search_dir = Path(args.dir).resolve()
+                print(f"Error: No xlsx files found in {search_dir}", file=sys.stderr)
+                sys.exit(1)
+        
+        result = extract_table(
+            filepath=target_file,
+            sheet_name=args.sheet,
+            include_header=not args.no_header,
+            delimiter=args.delimiter
+        )
+        
+        if result["success"]:
+            print(result["data"], end="")
+        else:
+            print(f"Error: {result['error']}", file=sys.stderr)
+            sys.exit(1)
+            
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+def find_most_recent_xlsx(directory):
+    """
+    Find the most recently modified xlsx file in the given directory.
+    
+    Args:
+        directory: Path object for directory to search
+        
+    Returns:
+        Path object of most recent xlsx file, or None if none found
+    """
+    try:
+        directory = Path(directory)
+        if not directory.exists():
+            return None
+        
+        xlsx_files = [f for f in directory.glob("*.xlsx") if f.is_file()]
+        
+        if not xlsx_files:
+            return None
+        
+        # Return the most recently modified file
+        return max(xlsx_files, key=os.path.getmtime)
+        
+    except Exception:
+        return None
+
+def extract_table(filepath, sheet_name=None, include_header=True, delimiter="\t"):
+    """
+    Extract table data from xlsx file.
+    
+    Args:
+        filepath: Path to xlsx file
+        sheet_name: Specific sheet to extract (None for auto-detect single sheet)
+        include_header: Whether to include header row
+        delimiter: Output delimiter
+        
+    Returns:
+        dict: {"success": bool, "data": str, "error": str}
+    """
+    try:
+        if not filepath.exists():
+            return {"success": False, "error": f"File not found: {filepath}"}
+        
+        if not filepath.suffix.lower() == '.xlsx':
+            return {"success": False, "error": f"Not an xlsx file: {filepath}"}
+        
+        # Read all sheets to check structure
+        all_sheets = pd.read_excel(filepath, sheet_name=None, engine='calamine')
+        
+        if not all_sheets:
+            return {"success": False, "error": "File contains no readable sheets"}
+        
+        # Handle sheet selection
+        if sheet_name:
+            if sheet_name not in all_sheets:
+                available = ", ".join(all_sheets.keys())
+                return {
+                    "success": False, 
+                    "error": f"Sheet '{sheet_name}' not found. Available: {available}"
+                }
+            df = all_sheets[sheet_name]
+        else:
+            # Auto-detect single sheet
+            sheet_names = list(all_sheets.keys())
+            if len(sheet_names) > 1:
+                return {
+                    "success": False,
+                    "error": f"Multiple sheets found ({', '.join(sheet_names)}). Use --sheet <name>"
+                }
+            df = all_sheets[sheet_names[0]]
+        
+        if df.empty:
+            return {"success": False, "error": "Sheet contains no data"}
+        
+        # Convert to specified format
+        output = df.to_csv(
+            sep=delimiter, 
+            index=False, 
+            header=include_header
+        )
+        
+        return {"success": True, "data": output}
+        
+    except FileNotFoundError:
+        return {"success": False, "error": f"File not found: {filepath}"}
+    except PermissionError:
+        return {"success": False, "error": f"Permission denied: {filepath}"}
+    except Exception as e:
+        return {"success": False, "error": f"Processing failed: {e}"}
+
+if __name__ == "__main__":
+    main()
