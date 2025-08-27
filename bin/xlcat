@@ -78,6 +78,9 @@ def main():
             
     except KeyboardInterrupt:
         sys.exit(1)
+    except BrokenPipeError:
+        # Handle broken pipe gracefully (e.g., when piped to head)
+        sys.exit(0)
     except Exception as e:
         print(f"Unexpected error: {e}", file=sys.stderr)
         sys.exit(1)
