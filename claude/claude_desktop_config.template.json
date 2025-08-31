@@ -30,15 +30,8 @@
       ]
     },
     "google-maps": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "-e",
-        "GOOGLE_MAPS_API_KEY",
-        "mcp/google-maps"
-      ],
+      "command": "/Users/Joshua/.dotfiles/bin/mcp-google-maps",
+      "args": [],
       "env": {
         "GOOGLE_MAPS_API_KEY": "{{ GOOGLE_MAPS_API_KEY }}"
       }

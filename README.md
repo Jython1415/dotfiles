@@ -84,6 +84,23 @@ This setup uses a template-based approach for the Claude Desktop configuration t
 
 This approach allows you to keep sensitive credentials out of your git repository while still tracking the configuration template.
 
+### MCP Container Management
+
+This setup includes wrapper scripts for MCP servers that use Docker to ensure proper container lifecycle management:
+
+- `bin/mcp-google-maps`: Wrapper for the Google Maps MCP server that ensures only one container runs at a time
+- `bin/mcp-cleanup`: Utility script to clean up any orphaned MCP Docker containers
+
+To clean up any accumulated containers manually:
+```bash
+~/.dotfiles/bin/mcp-cleanup
+```
+
+The wrapper scripts automatically:
+- Stop and remove any existing containers before starting new ones
+- Use proper Docker flags for graceful shutdown (`--init`, `--stop-timeout=5`)
+- Clean up containers when the MCP session ends
+
 ### Requirements for Hydration Script
 
 The script requires:
