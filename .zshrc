@@ -164,6 +164,7 @@ clear_with_confirmation() {
 }
 alias c='clear_with_confirmation'
 alias claude='claude --model sonnet'
+alias claude-runner-beta='docker run --rm -i -e CLAUDE_CODE_OAUTH_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN" -v $(pwd):/workspace claude-autonomous'
 alias clear='clear_with_confirmation'
 alias cwd='pwd | trim | pbcopy'
 getalias() { alias "$1" | awk -F'=' '{print $2}' | sed "s/^'//;s/'$//" }
