@@ -1,0 +1,182 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.9"
+# dependencies = []
+# ///
+"""
+tagwrap - Wrap text in XML tags
+
+Simple utility to wrap stdin content in XML tags with optional attributes.
+"""
+
+import sys
+import argparse
+from html import escape as html_escape
+
+
+def escape_xml(text):
+    """Escape XML special characters."""
+    return html_escape(text, quote=True)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Wrap stdin content in XML tags",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Block style (default)
+  pbpaste | tagwrap content
+
+  # Inline style
+  echo "Hello" | tagwrap greeting --inline
+
+  # With attributes
+  cat file.txt | tagwrap content -a type=text -a lang=en
+
+  # With indentation
+  pbpaste | tagwrap content -i 2
+        """.strip()
+    )
+
+    parser.add_argument(
+        "tag",
+        help="XML tag name to wrap content in"
+    )
+
+    parser.add_argument(
+        "-a", "--attr",
+        action="append",
+        dest="attributes",
+        metavar="KEY=VALUE",
+        help="Add XML attribute (can be used multiple times)"
+    )
+
+    parser.add_argument(
+        "-s", "--strip",
+        action="store_true",
+        help="Strip leading/trailing whitespace from content"
+    )
+
+    parser.add_argument(
+        "-e", "--no-escape",
+        action="store_true",
+        help="Don't escape XML special characters (for pre-escaped content)"
+    )
+
+    parser.add_argument(
+        "-i", "--indent",
+        type=int,
+        metavar="N",
+        help="Indent each line with N spaces (block style only)"
+    )
+
+    parser.add_argument(
+        "--inline",
+        action="store_true",
+        help="Use inline style (tags on same line as content)"
+    )
+
+    parser.add_argument(
+        "--preserve-newline",
+        action="store_true",
+        help="Don't strip trailing newline from content"
+    )
+
+    return parser.parse_args()
+
+
+def parse_attributes(attr_list):
+    """Parse KEY=VALUE attribute strings into a dict."""
+    if not attr_list:
+        return {}
+
+    attrs = {}
+    for attr in attr_list:
+        if "=" not in attr:
+            print(f"Error: Invalid attribute format '{attr}'. Expected KEY=VALUE", file=sys.stderr)
+            sys.exit(1)
+
+        key, value = attr.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+
+        if not key:
+            print(f"Error: Empty attribute key in '{attr}'", file=sys.stderr)
+            sys.exit(1)
+
+        attrs[key] = value
+
+    return attrs
+
+
+def format_attributes(attrs, escape=True):
+    """Format attributes dict as XML attribute string."""
+    if not attrs:
+        return ""
+
+    parts = []
+    for key, value in attrs.items():
+        escaped_value = escape_xml(value) if escape else value
+        parts.append(f'{key}="{escaped_value}"')
+
+    return " " + " ".join(parts)
+
+
+def main():
+    args = parse_args()
+
+    # Validate tag name (basic validation)
+    if not args.tag or not args.tag[0].isalpha():
+        print(f"Error: Invalid tag name '{args.tag}'. Tag names must start with a letter.", file=sys.stderr)
+        sys.exit(1)
+
+    # Read content from stdin
+    try:
+        content = sys.stdin.read()
+    except KeyboardInterrupt:
+        sys.exit(1)
+
+    # Process content
+    # Strip single trailing newline by default (unless preserve-newline or strip is used)
+    if not args.preserve_newline and not args.strip:
+        if content.endswith("\n"):
+            content = content[:-1]
+
+    if args.strip:
+        content = content.strip()
+
+    if not args.no_escape:
+        content = escape_xml(content)
+
+    # Parse attributes
+    attrs = parse_attributes(args.attributes)
+    attr_str = format_attributes(attrs, escape=not args.no_escape)
+
+    # Build output
+    if args.inline:
+        # Inline style: tags on same line as content
+        output = f"<{args.tag}{attr_str}>{content}</{args.tag}>"
+    else:
+        # Block style (default): tags on their own lines
+        if args.indent:
+            # Indent each line of content
+            indent_str = " " * args.indent
+            if content:
+                lines = content.split("\n")
+                indented_content = "\n".join(f"{indent_str}{line}" if line else "" for line in lines)
+                output = f"<{args.tag}{attr_str}>\n{indented_content}\n</{args.tag}>"
+            else:
+                output = f"<{args.tag}{attr_str}></{args.tag}>"
+        else:
+            # Block style without indentation
+            if content:
+                output = f"<{args.tag}{attr_str}>\n{content}\n</{args.tag}>"
+            else:
+                output = f"<{args.tag}{attr_str}></{args.tag}>"
+
+    print(output)
+
+
+if __name__ == "__main__":
+    main()
