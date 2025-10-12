@@ -59,9 +59,9 @@ Examples:
     )
 
     parser.add_argument(
-        "-e", "--no-escape",
+        "-e", "--escape",
         action="store_true",
-        help="Don't escape XML special characters (for pre-escaped content)"
+        help="Escape XML special characters"
     )
 
     parser.add_argument(
@@ -146,12 +146,12 @@ def main():
     if args.strip:
         content = content.strip()
 
-    if not args.no_escape:
+    if args.escape:
         content = escape_xml(content)
 
     # Parse attributes
     attrs = parse_attributes(args.attributes)
-    attr_str = format_attributes(attrs, escape=not args.no_escape)
+    attr_str = format_attributes(attrs, escape=args.escape)
 
     # Build output
     if args.inline:
