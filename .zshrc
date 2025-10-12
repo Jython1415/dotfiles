@@ -146,7 +146,6 @@ export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
 source <(fzf --zsh)
 
 # Claude Code
-alias claude="/Users/Joshua/.claude/local/claude"
 
 # >>> Personal Convenience Aliases and Functions >>>
 # Misc.
@@ -173,6 +172,7 @@ alias reload="source ~/.zshrc"
 alias sizes="du -sch *"
 alias t="type"
 alias trim='python3 -c "import sys; print(sys.stdin.read().strip(), end=\"\")"'
+cliptagwrap() { pbpaste | tagwrap "$@" | pbcopy }
 
 # Network
 alias getip="curl -s -w '\n' ifconfig.me/ip"
