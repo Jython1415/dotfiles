@@ -1,0 +1,477 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
+"""
+clipmerge - Merge entries from Alfred clipboard history
+
+Read-only tool to browse and merge multiple clipboard entries.
+Alfred automatically picks up the merged result when copied via pbcopy.
+"""
+
+import sys
+import sqlite3
+import subprocess
+import argparse
+from pathlib import Path
+from datetime import datetime
+from typing import List, Dict, Optional, Tuple
+
+
+# Constants
+ALFRED_DB_PATH = Path.home() / "Library/Application Support/Alfred/Databases/clipboard.alfdb"
+TEXT_DATA_TYPE = 0  # dataType value for text entries
+
+
+class ClipboardEntry:
+    """Represents a clipboard entry from Alfred's database."""
+
+    def __init__(self, item: str, ts: float, app: str, data_type: int, row_id: int):
+        self.item = item
+        self.ts = ts
+        self.app = app
+        self.data_type = data_type
+        self.row_id = row_id
+        self.timestamp = datetime.fromtimestamp(ts)
+
+    def preview(self, max_len: int = 60) -> str:
+        """Return a preview of the clipboard content."""
+        # Replace newlines with ↵ symbol for display
+        preview = self.item.replace('\n', '↵').replace('\r', '↵')
+        if len(preview) > max_len:
+            preview = preview[:max_len - 3] + "..."
+        return preview
+
+    def __str__(self) -> str:
+        time_str = self.timestamp.strftime("%m/%d %H:%M")
+        return f"[{time_str}] {self.app:12.12s} | {self.preview()}"
+
+
+class ClipboardDB:
+    """Read-only interface to Alfred's clipboard database."""
+
+    def __init__(self, db_path: Path = ALFRED_DB_PATH):
+        if not db_path.exists():
+            raise FileNotFoundError(f"Alfred clipboard database not found at {db_path}")
+        self.db_path = db_path
+
+    def _query(self, sql: str, params: tuple = ()) -> List[Dict]:
+        """Execute a read-only query and return results."""
+        conn = sqlite3.connect(f"file:{self.db_path}?mode=ro", uri=True)
+        conn.row_factory = sqlite3.Row
+        try:
+            cursor = conn.cursor()
+            cursor.execute(sql, params)
+            return [dict(row) for row in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def get_recent_text_entries(self, limit: int = 50) -> List[ClipboardEntry]:
+        """Get recent text entries from clipboard history."""
+        sql = """
+            SELECT rowid, item, ts, app, dataType
+            FROM clipboard
+            WHERE dataType = ?
+            ORDER BY ts DESC
+            LIMIT ?
+        """
+        rows = self._query(sql, (TEXT_DATA_TYPE, limit))
+        return [ClipboardEntry(r['item'], r['ts'], r['app'], r['dataType'], r['rowid'])
+                for r in rows]
+
+    def search_entries(self, query: str, limit: int = 50) -> List[ClipboardEntry]:
+        """Search for entries containing the query string."""
+        sql = """
+            SELECT rowid, item, ts, app, dataType
+            FROM clipboard
+            WHERE dataType = ? AND item LIKE ?
+            ORDER BY ts DESC
+            LIMIT ?
+        """
+        rows = self._query(sql, (TEXT_DATA_TYPE, f"%{query}%", limit))
+        return [ClipboardEntry(r['item'], r['ts'], r['app'], r['dataType'], r['rowid'])
+                for r in rows]
+
+
+def parse_selection(selection: str, max_index: int) -> List[int]:
+    """
+    Parse user selection string into list of indices.
+
+    Supports:
+    - Single numbers: "3"
+    - Comma-separated: "1,3,5"
+    - Ranges: "1-5"
+    - Mixed: "1,3-5,7"
+    - Special: "all"
+
+    Returns 0-based indices.
+    """
+    selection = selection.strip().lower()
+
+    if selection == "all":
+        return list(range(max_index))
+
+    indices = set()
+    parts = selection.split(',')
+
+    for part in parts:
+        part = part.strip()
+        if '-' in part:
+            # Range
+            try:
+                start, end = part.split('-', 1)
+                start_idx = int(start.strip()) - 1  # Convert to 0-based
+                end_idx = int(end.strip()) - 1
+                if start_idx < 0 or end_idx >= max_index or start_idx > end_idx:
+                    raise ValueError(f"Invalid range: {part}")
+                indices.update(range(start_idx, end_idx + 1))
+            except ValueError as e:
+                raise ValueError(f"Invalid range format '{part}': {e}")
+        else:
+            # Single number
+            try:
+                idx = int(part) - 1  # Convert to 0-based
+                if idx < 0 or idx >= max_index:
+                    raise ValueError(f"Index {int(part)} out of range (1-{max_index})")
+                indices.add(idx)
+            except ValueError as e:
+                raise ValueError(f"Invalid number '{part}': {e}")
+
+    return sorted(list(indices))
+
+
+def get_separator(sep_name: str) -> str:
+    """Convert separator name to actual string."""
+    separators = {
+        'newline': '\n',
+        'n': '\n',
+        'space': ' ',
+        's': ' ',
+        'comma': ',',
+        'c': ',',
+        'tab': '\t',
+        't': '\t',
+        'comma-space': ', ',
+        'cs': ', ',
+        'double-newline': '\n\n',
+        'nn': '\n\n',
+    }
+    return separators.get(sep_name.lower(), sep_name)
+
+
+def copy_to_clipboard(text: str) -> bool:
+    """Copy text to clipboard using pbcopy."""
+    try:
+        process = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
+        process.communicate(text.encode('utf-8'))
+        return process.returncode == 0
+    except Exception as e:
+        print(f"Error copying to clipboard: {e}", file=sys.stderr)
+        return False
+
+
+def display_entries(entries: List[ClipboardEntry], start_num: int = 1):
+    """Display a numbered list of clipboard entries."""
+    for i, entry in enumerate(entries, start=start_num):
+        print(f"{i:3d}. {entry}")
+
+
+def interactive_mode(db: ClipboardDB, limit: int = 30):
+    """Interactive mode for selecting and merging entries."""
+    entries = db.get_recent_text_entries(limit)
+
+    if not entries:
+        print("No text entries found in clipboard history.", file=sys.stderr)
+        return 1
+
+    print(f"\nRecent clipboard entries (showing {len(entries)}):\n")
+    display_entries(entries)
+
+    print("\nEnter selection (e.g., '1,3,5' or '1-5' or 'all' or 'q' to quit)")
+    print("You can also specify separator after []: 1,3,5 [newline|space|comma|tab|custom]")
+
+    try:
+        user_input = input("\nSelection: ").strip()
+    except (KeyboardInterrupt, EOFError):
+        print("\nCancelled.")
+        return 0
+
+    if user_input.lower() in ('q', 'quit', 'exit'):
+        return 0
+
+    # Parse separator if provided
+    separator = '\n'  # default
+    if '[' in user_input and ']' in user_input:
+        selection_part, sep_part = user_input.split('[', 1)
+        sep_name = sep_part.rstrip(']').strip()
+        separator = get_separator(sep_name)
+        user_input = selection_part.strip()
+
+    # Parse selection
+    try:
+        indices = parse_selection(user_input, len(entries))
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    if not indices:
+        print("No entries selected.", file=sys.stderr)
+        return 1
+
+    # Show what will be merged
+    selected_entries = [entries[i] for i in indices]
+    print(f"\nMerging {len(selected_entries)} entries:")
+    for i, entry in enumerate(selected_entries, 1):
+        print(f"  {i}. {entry.preview(80)}")
+
+    # Merge
+    merged = separator.join(entry.item for entry in selected_entries)
+
+    # Show preview
+    print(f"\nMerged result ({len(merged)} chars):")
+    print("-" * 80)
+    preview_lines = merged.split('\n')[:10]
+    print('\n'.join(preview_lines))
+    if len(preview_lines) < len(merged.split('\n')):
+        print(f"... ({len(merged.split('\n')) - len(preview_lines)} more lines)")
+    print("-" * 80)
+
+    # Confirm
+    try:
+        confirm = input("\nCopy to clipboard? [Y/n]: ").strip().lower()
+    except (KeyboardInterrupt, EOFError):
+        print("\nCancelled.")
+        return 0
+
+    if confirm and confirm not in ('y', 'yes'):
+        print("Cancelled.")
+        return 0
+
+    # Copy to clipboard
+    if copy_to_clipboard(merged):
+        print("✓ Copied to clipboard! Alfred will add it to history automatically.")
+        return 0
+    else:
+        print("Failed to copy to clipboard.", file=sys.stderr)
+        return 1
+
+
+def last_mode(db: ClipboardDB, count: int, separator: str = '\n'):
+    """Merge the last N entries."""
+    entries = db.get_recent_text_entries(count)
+
+    if len(entries) < count:
+        print(f"Warning: Only {len(entries)} entries available.", file=sys.stderr)
+
+    if not entries:
+        print("No text entries found.", file=sys.stderr)
+        return 1
+
+    print(f"Merging last {len(entries)} entries:")
+    display_entries(entries)
+
+    merged = separator.join(entry.item for entry in entries)
+
+    if copy_to_clipboard(merged):
+        print(f"\n✓ Merged {len(entries)} entries ({len(merged)} chars) to clipboard!")
+        return 0
+    else:
+        return 1
+
+
+def range_mode(db: ClipboardDB, start: int, end: int, separator: str = '\n'):
+    """Merge entries in the specified range."""
+    count = end - start + 1
+    entries = db.get_recent_text_entries(end)
+
+    if len(entries) < end:
+        print(f"Error: Only {len(entries)} entries available.", file=sys.stderr)
+        return 1
+
+    # Select the range (convert to 0-based)
+    selected = entries[start-1:end]
+
+    print(f"Merging entries {start}-{end}:")
+    display_entries(selected, start)
+
+    merged = separator.join(entry.item for entry in selected)
+
+    if copy_to_clipboard(merged):
+        print(f"\n✓ Merged {len(selected)} entries ({len(merged)} chars) to clipboard!")
+        return 0
+    else:
+        return 1
+
+
+def search_mode(db: ClipboardDB, query: str, limit: int = 30):
+    """Search for entries and then select which to merge."""
+    entries = db.search_entries(query, limit)
+
+    if not entries:
+        print(f"No entries found matching '{query}'.", file=sys.stderr)
+        return 1
+
+    print(f"\nFound {len(entries)} entries matching '{query}':\n")
+    display_entries(entries)
+
+    print("\nEnter selection (e.g., '1,3,5' or '1-5' or 'all' or 'q' to quit)")
+    print("You can also specify separator after []: 1,3,5 [newline|space|comma|tab|custom]")
+
+    try:
+        user_input = input("\nSelection: ").strip()
+    except (KeyboardInterrupt, EOFError):
+        print("\nCancelled.")
+        return 0
+
+    if user_input.lower() in ('q', 'quit', 'exit'):
+        return 0
+
+    # Parse separator if provided
+    separator = '\n'  # default
+    if '[' in user_input and ']' in user_input:
+        selection_part, sep_part = user_input.split('[', 1)
+        sep_name = sep_part.rstrip(']').strip()
+        separator = get_separator(sep_name)
+        user_input = selection_part.strip()
+
+    # Parse selection
+    try:
+        indices = parse_selection(user_input, len(entries))
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    if not indices:
+        print("No entries selected.", file=sys.stderr)
+        return 1
+
+    selected_entries = [entries[i] for i in indices]
+    merged = separator.join(entry.item for entry in selected_entries)
+
+    if copy_to_clipboard(merged):
+        print(f"✓ Merged {len(selected_entries)} entries ({len(merged)} chars) to clipboard!")
+        return 0
+    else:
+        return 1
+
+
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Merge entries from Alfred clipboard history",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Interactive mode (browse and select)
+  clipmerge
+  clipmerge interactive
+
+  # Interactive with custom separator
+  # In interactive mode, use: 1,3,5 [comma-space]
+
+  # Merge last N entries
+  clipmerge last 5
+  clipmerge last 10 --sep newline
+
+  # Merge entries in range
+  clipmerge range 2 8
+  clipmerge range 1 5 --sep comma
+
+  # Search then select
+  clipmerge search "keyword"
+  clipmerge search "python" -l 50
+
+Separator options:
+  newline (n)       - Newline (default)
+  space (s)         - Single space
+  comma (c)         - Comma
+  tab (t)           - Tab
+  comma-space (cs)  - Comma followed by space
+  double-newline (nn) - Double newline
+  <custom>          - Any custom string
+
+Notes:
+  - Only text clipboard entries are shown/merged
+  - Database is read-only (Alfred adds merged result automatically)
+  - Selection format: "1,3,5" or "1-5" or "all"
+        """.strip()
+    )
+
+    subparsers = parser.add_subparsers(dest='mode', help='Operation mode')
+
+    # Interactive mode (default)
+    interactive_parser = subparsers.add_parser('interactive', help='Interactive selection mode')
+    interactive_parser.add_argument('-l', '--limit', type=int, default=30,
+                                   help='Number of recent entries to show (default: 30)')
+
+    # Last mode
+    last_parser = subparsers.add_parser('last', help='Merge last N entries')
+    last_parser.add_argument('count', type=int, help='Number of entries to merge')
+    last_parser.add_argument('--sep', '--separator', default='newline',
+                            help='Separator (default: newline)')
+
+    # Range mode
+    range_parser = subparsers.add_parser('range', help='Merge entries in range')
+    range_parser.add_argument('start', type=int, help='Start position (1-based)')
+    range_parser.add_argument('end', type=int, help='End position (1-based)')
+    range_parser.add_argument('--sep', '--separator', default='newline',
+                             help='Separator (default: newline)')
+
+    # Search mode
+    search_parser = subparsers.add_parser('search', help='Search then select entries')
+    search_parser.add_argument('query', help='Search query')
+    search_parser.add_argument('-l', '--limit', type=int, default=30,
+                              help='Max results to show (default: 30)')
+
+    return parser.parse_args()
+
+
+def main():
+    """Main entry point."""
+    args = parse_args()
+
+    # Initialize database
+    try:
+        db = ClipboardDB()
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        print("\nMake sure Alfred clipboard history is enabled:", file=sys.stderr)
+        print("  Alfred Preferences → Features → Clipboard History", file=sys.stderr)
+        return 1
+
+    # Default to interactive mode if no mode specified
+    mode = args.mode or 'interactive'
+
+    try:
+        if mode == 'interactive':
+            limit = getattr(args, 'limit', 30)
+            return interactive_mode(db, limit)
+
+        elif mode == 'last':
+            separator = get_separator(args.sep)
+            return last_mode(db, args.count, separator)
+
+        elif mode == 'range':
+            if args.start < 1 or args.end < args.start:
+                print("Error: Invalid range. Start must be >= 1 and end must be >= start.",
+                      file=sys.stderr)
+                return 1
+            separator = get_separator(args.sep)
+            return range_mode(db, args.start, args.end, separator)
+
+        elif mode == 'search':
+            limit = getattr(args, 'limit', 30)
+            return search_mode(db, args.query, limit)
+
+        else:
+            print(f"Unknown mode: {mode}", file=sys.stderr)
+            return 1
+
+    except KeyboardInterrupt:
+        print("\nInterrupted.", file=sys.stderr)
+        return 130
+
+
+if __name__ == "__main__":
+    sys.exit(main())
