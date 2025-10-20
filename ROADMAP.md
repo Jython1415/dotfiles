@@ -1,0 +1,49 @@
+# Dotfiles Configuration Roadmap
+
+- [ ] Fix hardcoded `/Users/Joshua/.local/bin` path in .zshrc to use $HOME
+- [ ] Fix hardcoded Racket version path in .zshrc to be version-agnostic
+- [ ] Fix hardcoded `/Users/Joshua/.deno/env` path in .zshrc to use $HOME
+- [ ] Fix hardcoded `/Users/Joshua/Library/pnpm` path in .zshrc to use $HOME
+- [ ] Fix all hardcoded `/Users/Joshua/Documents/...` paths in claude_desktop_config.template.json
+- [ ] Fix hardcoded `$HOME/.dotfiles/.zshrc` assumption in bin/theme-switch
+- [ ] Fix platform-specific `sed -i ""` command in bin/theme-switch for Linux compatibility
+- [ ] Add rbenv installation to installer.sh or remove rbenv eval from .zshrc
+- [ ] Resolve TODO about smartindent in .vimrc line 7
+- [ ] Resolve TODO about mouse setting in .vimrc line 9 (enable or remove)
+- [ ] Remove or resolve git status TODO in .zshrc lines 59-62
+- [ ] Implement lazy-loading for nvm to improve shell startup performance
+- [ ] Implement lazy-loading for rbenv to improve shell startup performance
+- [ ] Update .vimrc clipboard setting from `unnamed` to `unnamedplus` for cross-platform compatibility
+- [ ] Consider migrating from Vim to Neovim for better performance
+- [ ] Update coc.nvim configuration and check for deprecated patterns
+- [ ] Consider adding tree-sitter to vim for better syntax highlighting
+- [ ] Remove large blocks of commented OMZ defaults in .zshrc lines 10-47
+- [ ] Remove commented mouse setting in .vimrc line 9 after resolving
+- [ ] Add comment explaining grep unaliasing in .zshrc lines 65-68 or remove if unnecessary
+- [ ] Test if VSCode Python hook in .zshrc lines 107-111 is still needed with modern VSCode
+- [ ] Fix git alias in .zshrc line 114 to work on Intel Macs and Linux, not just ARM
+- [ ] Reconsider clear confirmation function in .zshrc lines 153-164 (remove, make opt-in, or document)
+- [ ] Update nvm version in installer.sh from v0.40.2 to latest
+- [ ] Update Python version detection logic in installer.sh to support 3.13+
+- [ ] Add version checks for uv tools in installer.sh
+- [ ] Rename or remove `-beta` suffix from claude-runner-beta alias in .zshrc
+- [ ] Make Claude model parameter flexible instead of hardcoded in .zshrc line 165
+- [ ] Add case-insensitive search flag 'i' to LESS options in .zshrc line 117
+- [ ] Add `set -u` to installer.sh for treating unset variables as errors
+- [ ] Consider using brew bundle and Brewfile for package management in installer.sh
+- [ ] Add `--quiet` flags to installer.sh commands for less verbose output
+- [ ] Extract architecture detection to variable in installer.sh to avoid repetition
+- [ ] Add uv completion to .zshrc
+- [ ] Add cargo/rustup completion to .zshrc
+- [ ] Add gh (GitHub CLI) completion to .zshrc if installed
+- [ ] Add docker completion to .zshrc
+- [ ] Consider adding zsh-autosuggestions plugin to .zshrc
+- [ ] Consider adding zsh-syntax-highlighting plugin to .zshrc
+- [ ] Consider adding colored-man-pages plugin to .zshrc
+- [ ] Consider adding command-not-found plugin to .zshrc
+- [ ] Evaluate if Racket is still needed and remove from .zshrc line 126 if not
+- [ ] Evaluate if TeX is still needed and remove from .zshrc line 123 if not
+- [ ] Evaluate if Ruby/rbenv is still needed and remove from .zshrc line 129 if not
+- [ ] Evaluate if Deno is still needed and remove from .zshrc line 132 if not
+- [ ] Evaluate if rwbench utility in bin/rwbench is still useful
+- [ ] Review all 7 Claude MCP servers and remove unused ones to reduce startup overhead
