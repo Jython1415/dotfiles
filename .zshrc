@@ -170,13 +170,13 @@ copyspreadsheet() {
   xlcat -d "$dir" | pbcopy
 }
 alias cwd='pwd | trim | pbcopy'
-getalias() { alias "$1" | awk -F'=' '{print $2}' | sed "s/^'//;s/'$//" }
+getalias() { alias "$1" | awk -F='=' '{print $2}' | sed "s/^'//;s/'$//"; }
 alias mv='mv -i'
 alias reload="source ~/.zshrc"
 alias sizes="du -sch *"
 alias t="type"
 alias trim='python3 -c "import sys; print(sys.stdin.read().strip(), end=\"\")"'
-cliptagwrap() { pbpaste | tagwrap "$@" | pbcopy }
+cliptagwrap() { pbpaste | tagwrap "$@" | pbcopy; }
 
 # Network
 alias getip="curl -s -w '\n' ifconfig.me/ip"
