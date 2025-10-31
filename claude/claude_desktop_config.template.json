@@ -1,5 +1,19 @@
 {
   "globalShortcut": "",
+  "autoApprovals": [
+    {
+      "tool": "mcp__github-clone__repo_read"
+    },
+    {
+      "tool": "mcp__github-clone__repo_grep"
+    },
+    {
+      "tool": "mcp__github-clone__repo_glob"
+    },
+    {
+      "tool": "mcp__github-clone__repo_status"
+    }
+  ],
   "mcpServers": {
     "bluesky": {
       "command": "node",
@@ -47,17 +61,6 @@
         "--script",
         "/Users/Joshua/Documents/_programming/simple-mcp-servers/large_file_reader_mcp.py"
       ]
-    },
-    "obsidian-vault": {
-      "command": "/Users/Joshua/.local/bin/uv",
-      "args": [
-        "run",
-        "--script",
-        "/Users/Joshua/Documents/_programming/simple-mcp-servers/obsidian_vault_mcp.py"
-      ],
-      "env": {
-        "OBSIDIAN_VAULT_PATH": "/Users/Joshua/Documents/obsidian-main-vault"
-      }
     },
     "youtube-transcript": {
       "command": "/Users/Joshua/.local/bin/uvx",
