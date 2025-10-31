@@ -57,7 +57,7 @@ HIST_STAMPS="yyyy-mm-dd"
 plugins=(git virtualenv dirhistory)
 
 # TODO get git info working without having to disable async updates
-# - I changed this because git status info was not being included ih the prompt
+# - I changed this because git status info was not being included in the prompt
 # - https://claude.ai/chat/a7bde7d6-a233-463a-a795-8d6914a46ca2
 zstyle ':omz:alpha:lib:git' async-prompt "false"
 
@@ -162,14 +162,16 @@ clear_with_confirmation() {
   fi
 }
 alias c='clear_with_confirmation'
-alias claude='claude --model sonnet'
-alias claude-runner-beta='docker run --rm -i -e CLAUDE_CODE_OAUTH_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN" -v $(pwd):/workspace claude-autonomous'
+# alias claude='claude --model sonnet'
 alias clear='clear_with_confirmation'
 copyspreadsheet() {
   local dir="${1:-.}"
   xlcat -d "$dir" | pbcopy
 }
 alias cwd='pwd | trim | pbcopy'
+scratch() {
+  vim /tmp/scratch-$(date +%s).txt
+}
 getalias() { alias "$1" | awk -F='=' '{print $2}' | sed "s/^'//;s/'$//"; }
 alias mv='mv -i'
 alias reload="source ~/.zshrc"
