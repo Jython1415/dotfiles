@@ -170,9 +170,31 @@ copyxlsx() {
 }
 copycsv() {
   local dir="${1:-.}"
+  local delimiter=$'\t'  # TSV by default
+
+  # Parse optional --delimiter flag
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+      --delimiter)
+        delimiter="$2"
+        shift 2
+        ;;
+      *)
+        dir="$1"
+        shift
+        ;;
+    esac
+  done
+
   local csv_file=$(find "$dir" -maxdepth 1 -name "*.csv" -type f -print0 | xargs -0 ls -t | head -n 1)
   if [[ -n "$csv_file" ]]; then
-    cat "$csv_file" | pbcopy
+    python3 -c "
+import csv, sys
+with open('$csv_file', 'r') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        print('$delimiter'.join(row))
+" | pbcopy
   else
     echo "No CSV files found in $dir" >&2
     return 1
