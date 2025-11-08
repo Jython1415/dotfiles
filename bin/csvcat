@@ -1,0 +1,150 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "pandas>=2.0.0",
+# ]
+# ///
+
+import argparse
+import os
+import sys
+import pandas as pd
+from pathlib import Path
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Extract table data from CSV files as TSV",
+        epilog="""Examples:
+  csvcat                          # Most recent csv in current directory
+  csvcat | pbcopy                 # Most recent csv to clipboard
+  csvcat -d ~/Downloads           # Most recent csv in Downloads
+  csvcat report.csv               # Specific file
+  csvcat data.csv --delimiter ',' # Output as CSV instead of TSV""",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    parser.add_argument(
+        "file",
+        nargs="?",
+        help="Specific csv file (if not provided, finds most recent in directory)"
+    )
+    parser.add_argument(
+        "-d", "--dir",
+        default=".",
+        help="Directory to search for csv files (default: current directory)"
+    )
+    parser.add_argument(
+        "--no-header",
+        action="store_true",
+        help="Skip header row in output"
+    )
+    parser.add_argument(
+        "--delimiter",
+        default="\t",
+        help="Output delimiter (default: tab)"
+    )
+
+    args = parser.parse_args()
+
+    try:
+        # Determine which file to process
+        if args.file:
+            target_file = Path(args.file)
+        else:
+            target_file = find_most_recent_csv(Path(args.dir))
+            if not target_file:
+                search_dir = Path(args.dir).resolve()
+                print(f"Error: No csv files found in {search_dir}", file=sys.stderr)
+                sys.exit(1)
+
+        result = extract_table(
+            filepath=target_file,
+            include_header=not args.no_header,
+            delimiter=args.delimiter
+        )
+
+        if result["success"]:
+            print(result["data"], end="")
+        else:
+            print(f"Error: {result['error']}", file=sys.stderr)
+            sys.exit(1)
+
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except BrokenPipeError:
+        # Handle broken pipe gracefully (e.g., when piped to head)
+        sys.exit(0)
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+def find_most_recent_csv(directory):
+    """
+    Find the most recently modified csv file in the given directory.
+
+    Args:
+        directory: Path object for directory to search
+
+    Returns:
+        Path object of most recent csv file, or None if none found
+    """
+    try:
+        directory = Path(directory)
+        if not directory.exists():
+            return None
+
+        csv_files = [f for f in directory.glob("*.csv") if f.is_file()]
+
+        if not csv_files:
+            return None
+
+        # Return the most recently modified file
+        return max(csv_files, key=os.path.getmtime)
+
+    except Exception:
+        return None
+
+def extract_table(filepath, include_header=True, delimiter="\t"):
+    """
+    Extract table data from csv file.
+
+    Args:
+        filepath: Path to csv file
+        include_header: Whether to include header row
+        delimiter: Output delimiter
+
+    Returns:
+        dict: {"success": bool, "data": str, "error": str}
+    """
+    try:
+        if not filepath.exists():
+            return {"success": False, "error": f"File not found: {filepath}"}
+
+        if not filepath.suffix.lower() == '.csv':
+            return {"success": False, "error": f"Not a csv file: {filepath}"}
+
+        # Read CSV file
+        df = pd.read_csv(filepath)
+
+        if df.empty:
+            return {"success": False, "error": "File contains no data"}
+
+        # Convert to specified format
+        output = df.to_csv(
+            sep=delimiter,
+            index=False,
+            header=include_header
+        )
+
+        return {"success": True, "data": output}
+
+    except FileNotFoundError:
+        return {"success": False, "error": f"File not found: {filepath}"}
+    except PermissionError:
+        return {"success": False, "error": f"Permission denied: {filepath}"}
+    except Exception as e:
+        return {"success": False, "error": f"Processing failed: {e}"}
+
+if __name__ == "__main__":
+    main()
