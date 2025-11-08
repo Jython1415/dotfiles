@@ -168,6 +168,10 @@ copyxlsx() {
   local dir="${1:-.}"
   xlcat -d "$dir" | pbcopy
 }
+copycsv() {
+  local dir="${1:-.}"
+  xlcat -d "$dir" --csv | pbcopy
+}
 alias cwd='pwd | trim | pbcopy'
 scratch() {
   vim /tmp/scratch-$(date +%s).txt
