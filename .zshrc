@@ -170,7 +170,13 @@ copyxlsx() {
 }
 copycsv() {
   local dir="${1:-.}"
-  xlcat -d "$dir" --csv | pbcopy
+  local csv_file=$(find "$dir" -maxdepth 1 -name "*.csv" -type f -print0 | xargs -0 ls -t | head -n 1)
+  if [[ -n "$csv_file" ]]; then
+    cat "$csv_file" | pbcopy
+  else
+    echo "No CSV files found in $dir" >&2
+    return 1
+  fi
 }
 alias cwd='pwd | trim | pbcopy'
 scratch() {
