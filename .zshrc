@@ -164,7 +164,7 @@ clear_with_confirmation() {
 alias c='clear_with_confirmation'
 # alias claude='claude --model sonnet'
 alias clear='clear_with_confirmation'
-copyspreadsheet() {
+copyxlsx() {
   local dir="${1:-.}"
   xlcat -d "$dir" | pbcopy
 }
