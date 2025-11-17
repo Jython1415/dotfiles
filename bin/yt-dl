@@ -1,0 +1,134 @@
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "yt-dlp",
+# ]
+# ///
+
+import sys
+import subprocess
+import json
+
+def format_size(bytes_val):
+    """Format bytes to human readable string"""
+    if not bytes_val:
+        return "N/A"
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if bytes_val < 1024.0:
+            return f"{bytes_val:.1f}{unit}"
+        bytes_val /= 1024.0
+    return f"{bytes_val:.1f}TB"
+
+def show_custom_formats(url):
+    """Show formats in a clean, custom format"""
+    from yt_dlp import YoutubeDL
+
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'extractor_args': {'youtube': {'remote_components': ['ejs:github']}}
+    }
+
+    with YoutubeDL(ydl_opts) as ydl:
+        try:
+            info = ydl.extract_info(url, download=False)
+            formats = info.get('formats', [])
+
+            # Separate video, audio, and combined formats
+            video_formats = []
+            audio_formats = []
+
+            for f in formats:
+                # Skip storyboard/images
+                if f.get('vcodec') == 'images':
+                    continue
+
+                is_video = f.get('vcodec') and f.get('vcodec') != 'none'
+                is_audio = f.get('acodec') and f.get('acodec') != 'none'
+
+                if is_video and not is_audio:
+                    video_formats.append(f)
+                elif is_audio and not is_video:
+                    audio_formats.append(f)
+
+            # Print header
+            print(f"\nAvailable formats for: {info.get('title', url)}\n")
+
+            # Print video formats
+            if video_formats:
+                print("VIDEO FORMATS:")
+                print(f"{'ID':<8} {'Resolution':<12} {'FPS':<5} {'Codec':<10} {'Size':<10}")
+                print("-" * 55)
+                for f in sorted(video_formats, key=lambda x: x.get('height', 0) or 0):
+                    format_id = f.get('format_id', 'N/A')
+                    resolution = f"{f.get('width', '?')}x{f.get('height', '?')}"
+                    fps = str(f.get('fps', '?'))
+                    vcodec = f.get('vcodec', 'N/A')[:10]
+                    size = format_size(f.get('filesize') or f.get('filesize_approx'))
+                    print(f"{format_id:<8} {resolution:<12} {fps:<5} {vcodec:<10} {size:<10}")
+
+            # Print audio formats
+            if audio_formats:
+                print("\nAUDIO FORMATS:")
+                print(f"{'ID':<8} {'Codec':<10} {'Bitrate':<10} {'Size':<10}")
+                print("-" * 40)
+                for f in sorted(audio_formats, key=lambda x: x.get('abr', 0) or 0):
+                    format_id = f.get('format_id', 'N/A')
+                    acodec = f.get('acodec', 'N/A')[:10]
+                    abr = f"{f.get('abr', '?')}k" if f.get('abr') else 'N/A'
+                    size = format_size(f.get('filesize') or f.get('filesize_approx'))
+                    print(f"{format_id:<8} {acodec:<10} {abr:<10} {size:<10}")
+
+            print("\nTo download a specific format: yt-dl -f FORMAT_ID URL")
+            print("To combine video+audio: yt-dl -f 'VIDEO_ID+AUDIO_ID' URL")
+
+        except Exception as e:
+            print(f"Error fetching formats: {e}", file=sys.stderr)
+            sys.exit(1)
+
+def main():
+    # Check if we're listing formats with our custom formatter
+    if '-F' in sys.argv or '--list-formats' in sys.argv:
+        # Remove the -F flag and get the URL
+        args = [arg for arg in sys.argv[1:] if arg not in ['-F', '--list-formats']]
+        if args:
+            show_custom_formats(args[0])
+            return
+        else:
+            print("Error: Please provide a URL", file=sys.stderr)
+            sys.exit(1)
+
+    # Import yt-dlp's main function
+    from yt_dlp import main as yt_dlp_main
+
+    # Enable remote components for YouTube signature solving
+    # Add --remote-components ejs:github if not already specified
+    if '--remote-components' not in sys.argv:
+        sys.argv.insert(1, '--remote-components')
+        sys.argv.insert(2, 'ejs:github')
+
+    # Ensure output is mp4 format if not specified
+    if '--merge-output-format' not in sys.argv and '--recode-video' not in sys.argv:
+        sys.argv.insert(1, '--merge-output-format')
+        sys.argv.insert(2, 'mp4')
+
+    # Default quality settings for 720p if no format specified
+    # Check if user provided custom format arguments
+    has_format_args = any(arg in sys.argv for arg in ['-f', '--format'])
+
+    if not has_format_args and len(sys.argv) > 1 and not sys.argv[1].startswith('-'):
+        # Insert default format for 720p before the URL
+        # bestvideo[height<=720]+bestaudio/best[height<=720]
+        # This prefers 720p but will merge video+audio for best quality
+        sys.argv.insert(1, '-f')
+        sys.argv.insert(2, 'bestvideo[height<=720]+bestaudio/best[height<=720]')
+
+    # Run yt-dlp with all arguments
+    try:
+        yt_dlp_main(sys.argv[1:])
+    except SystemExit as e:
+        sys.exit(e.code)
+
+if __name__ == "__main__":
+    main()
