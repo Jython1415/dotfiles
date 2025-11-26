@@ -1,0 +1,181 @@
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
+"""
+Save lesson plan PDFs from Chrome tabs.
+
+Downloads the rightmost N tabs from the frontmost Chrome window,
+saving them with sequential student-prefixed names.
+
+Usage: savelp NAME [COUNT] [--folder] [-y]
+"""
+
+import subprocess
+import sys
+import os
+from datetime import datetime
+import urllib.request
+
+
+def is_pdf_url(url: str) -> bool:
+    """Check if URL is a PDF by examining Content-Type header."""
+    try:
+        req = urllib.request.Request(url, method='HEAD')
+        with urllib.request.urlopen(req, timeout=5) as response:
+            content_type = response.headers.get('Content-Type', '')
+            return 'application/pdf' in content_type.lower()
+    except Exception:
+        return False
+
+
+def get_all_chrome_tab_urls() -> list[str]:
+    """Get all tab URLs from the frontmost Chrome window."""
+    script = '''
+    tell application "Google Chrome"
+        set tabURLs to {}
+        set w to front window
+        set totalTabs to count of tabs of w
+
+        repeat with i from 1 to totalTabs
+            set end of tabURLs to URL of tab i of w
+        end repeat
+
+        return tabURLs
+    end tell
+    '''
+    result = subprocess.run(
+        ['osascript', '-e', script],
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        error_msg = result.stderr.strip()
+        if "Google Chrome got an error" in error_msg:
+            print(f"Error: {error_msg.split('Google Chrome got an error:')[-1].strip()}", file=sys.stderr)
+        else:
+            print(f"Error accessing Chrome: {error_msg}", file=sys.stderr)
+        sys.exit(1)
+
+    return [url.strip() for url in result.stdout.strip().split(', ')]
+
+
+def count_trailing_pdfs(urls: list[str]) -> int:
+    """Count consecutive PDF URLs from the end of the list."""
+    count = 0
+    for url in reversed(urls):
+        print(f"Checking tab {len(urls) - count}...", end='\r')
+        if is_pdf_url(url):
+            count += 1
+        else:
+            break
+    print(" " * 30, end='\r')  # Clear the checking message
+    return count
+
+
+def download_pdf(url: str, filepath: str) -> bool:
+    """Download PDF from URL to filepath. Returns True on success."""
+    try:
+        urllib.request.urlretrieve(url, filepath)
+        return True
+    except Exception as e:
+        print(f"  Failed: {e}", file=sys.stderr)
+        return False
+
+
+def main():
+    args = sys.argv[1:]
+
+    if not args or args[0] in ['-h', '--help']:
+        print("Usage: savelp NAME [COUNT] [--folder] [-y]")
+        print()
+        print("Save rightmost Chrome PDF tabs with sequential naming.")
+        print()
+        print("Arguments:")
+        print("  NAME       Student name prefix for files")
+        print("  COUNT      Number of PDFs (optional - auto-detects if omitted)")
+        print()
+        print("Options:")
+        print("  --folder   Save to ~/Downloads/NAME_YYYY-MM-DD/")
+        print("  -y, --yes  Skip confirmation prompt when auto-detecting")
+        print()
+        print("Examples:")
+        print("  savelp Alex            # Auto-detect PDF count")
+        print("  savelp Alex 5          # Save 5 PDFs as Alex-1.pdf through Alex-5.pdf")
+        print("  savelp Alex --folder   # Auto-detect, save to dated folder")
+        sys.exit(0)
+
+    # Parse flags
+    use_folder = '--folder' in args
+    skip_confirm = '-y' in args or '--yes' in args
+    args = [a for a in args if a not in ['--folder', '-y', '--yes']]
+
+    student_name = args[0]
+
+    # Get all tab URLs first
+    all_urls = get_all_chrome_tab_urls()
+
+    if len(args) >= 2:
+        # Explicit count provided
+        try:
+            num_pdfs = int(args[1])
+        except ValueError:
+            print(f"Error: COUNT must be a number, got '{args[1]}'", file=sys.stderr)
+            sys.exit(1)
+        if num_pdfs > len(all_urls):
+            print(f"Error: Requested {num_pdfs} tabs but only {len(all_urls)} available", file=sys.stderr)
+            sys.exit(1)
+    else:
+        # Auto-detect PDF count
+        num_pdfs = count_trailing_pdfs(all_urls)
+        if num_pdfs == 0:
+            print("No PDF tabs found at end of window", file=sys.stderr)
+            sys.exit(1)
+
+        if not skip_confirm:
+            try:
+                response = input(f"Found {num_pdfs} PDF tab(s). Continue? [Y/n]: ").strip().lower()
+                if response and response not in ['y', 'yes']:
+                    print("Cancelled")
+                    sys.exit(0)
+            except (EOFError, KeyboardInterrupt):
+                print("\nCancelled")
+                sys.exit(0)
+
+    if num_pdfs < 1:
+        print("Error: COUNT must be at least 1", file=sys.stderr)
+        sys.exit(1)
+
+    # Get the rightmost N URLs
+    urls = all_urls[-num_pdfs:]
+
+    # Determine destination
+    if use_folder:
+        date_str = datetime.now().strftime('%Y-%m-%d')
+        dest_dir = os.path.expanduser(f"~/Downloads/{student_name}_{date_str}")
+        os.makedirs(dest_dir, exist_ok=True)
+    else:
+        dest_dir = os.path.expanduser("~/Downloads")
+
+    # Download each PDF
+    digits = len(str(num_pdfs))
+    success_count = 0
+
+    for i, url in enumerate(urls, 1):
+        filename = f"{student_name}-{i:0{digits}d}.pdf"
+        filepath = os.path.join(dest_dir, filename)
+
+        print(f"Downloading {i}/{num_pdfs}: {filename}")
+        if download_pdf(url, filepath):
+            success_count += 1
+
+    print(f"\nSaved {success_count}/{num_pdfs} PDFs to {dest_dir}")
+
+    if success_count < num_pdfs:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
