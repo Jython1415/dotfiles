@@ -281,6 +281,11 @@ log "Regular and minimal themes symlinked successfully"
 ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
 ln -sf "$DOTFILES_DIR/.zshenv" "$HOME/.zshenv"
 
+# Configure global gitignore
+ln -sf "$DOTFILES_DIR/.gitignore_global" "$HOME/.gitignore_global"
+git config --global core.excludesfile "$HOME/.gitignore_global"
+log "Global gitignore configured"
+
 # Make sure bin directory is executable
 # This is currently commented out because I believe that executable status is stored in the repository
 # if [ -d "$DOTFILES_DIR/bin" ]; then
