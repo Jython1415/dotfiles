@@ -211,3 +211,6 @@ alias dcd='docker-compose down'
 # <<< Personal Convenience Aliases and Functions <<<
 
 alias claude="/Users/Joshua/.claude/local/claude"
+
+# Tailscale
+alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
