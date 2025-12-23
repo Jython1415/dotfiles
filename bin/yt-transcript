@@ -47,15 +47,16 @@ def main():
     
     try:
         # Get transcript
-        transcript = YouTubeTranscriptApi.get_transcript(video_id)
-        
+        api = YouTubeTranscriptApi()
+        transcript = api.fetch(video_id)
+
         if args.raw:
             # Output full JSON
-            print(json.dumps(transcript, indent=2))
+            print(json.dumps(transcript.to_raw_data(), indent=2))
         else:
             # Output just the text
-            for entry in transcript:
-                print(entry['text'])
+            for snippet in transcript.snippets:
+                print(snippet.text)
                 
     except Exception as e:
         print(f"Error fetching transcript: {e}", file=sys.stderr)
