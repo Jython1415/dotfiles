@@ -1,0 +1,122 @@
+#!/usr/bin/swift
+//
+// apwd - Generate Apple-style passwords
+//
+// Generates secure passwords using Apple's password format (cvccvc-cvccvc-cvccvc)
+// and copies them to the clipboard with concealed type to prevent history storage.
+//
+// Usage:
+//   apwd              Generate and copy to clipboard (silent)
+//   apwd --print      Generate, print to stdout, and copy to clipboard
+//   apwd -p           Same as --print
+//   apwd --help       Show help
+
+import AppKit
+import Foundation
+
+// Character sets for password generation
+let consonants = Array("bcdfghjkmnpqrstvwxz")  // 19 characters
+let vowels = Array("aeilouy")                   // 6 characters (l and y are vowels)
+let digits = Array("0123456789")                // 10 characters
+
+// Valid positions for digit placement (0-indexed)
+// Positions 5, 7, 12, 14, 19 are the consonants at syllable boundaries
+let digitPositions = [5, 7, 12, 14, 19]
+
+func generatePassword() -> String {
+    // Generate 3 syllables (each: cvccvc)
+    var syllables: [String] = []
+    for _ in 0..<3 {
+        let syllable = String([
+            consonants.randomElement()!,
+            vowels.randomElement()!,
+            consonants.randomElement()!,
+            consonants.randomElement()!,
+            vowels.randomElement()!,
+            consonants.randomElement()!
+        ])
+        syllables.append(syllable)
+    }
+
+    // Join with hyphens
+    var password = Array(syllables.joined(separator: "-"))
+
+    // Replace one consonant with a digit at a valid position
+    let digitPos = digitPositions.randomElement()!
+    password[digitPos] = digits.randomElement()!
+
+    // Capitalize one random letter
+    let letterPositions = password.indices.filter { password[$0].isLetter }
+    if let upperPos = letterPositions.randomElement() {
+        password[upperPos] = password[upperPos].uppercased().first!
+    }
+
+    return String(password)
+}
+
+func copyToClipboard(_ text: String) -> Bool {
+    let pasteboard = NSPasteboard.general
+    pasteboard.clearContents()
+
+    // Set both standard and concealed types
+    guard pasteboard.setString(text, forType: .string) else {
+        return false
+    }
+    pasteboard.setString(text, forType: NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType"))
+
+    return true
+}
+
+func showHelp() {
+    print("""
+apwd - Generate Apple-style passwords
+
+Usage:
+  apwd              Generate and copy to clipboard (silent)
+  apwd --print      Generate, print to stdout, and copy to clipboard
+  apwd -p           Same as --print
+  apwd --help       Show this help
+
+Password format: cvccvc-cvccvc-cvccvc
+  - 20 characters: 18 letters + 2 hyphens
+  - 1 uppercase letter, 1 digit
+  - 71 bits of entropy
+
+The password is copied with org.nspasteboard.ConcealedType to prevent
+clipboard managers (like Alfred) from saving it to history.
+""")
+}
+
+// Parse arguments
+let args = CommandLine.arguments.dropFirst()
+var shouldPrint = false
+
+for arg in args {
+    switch arg {
+    case "--help", "-h":
+        showHelp()
+        exit(0)
+    case "--print", "-p":
+        shouldPrint = true
+    default:
+        fputs("Error: Unknown argument '\(arg)'\n", stderr)
+        fputs("Use --help for usage information\n", stderr)
+        exit(1)
+    }
+}
+
+// Generate password
+let password = generatePassword()
+
+// Print if requested
+if shouldPrint {
+    print(password)
+}
+
+// Copy to clipboard
+if !copyToClipboard(password) {
+    fputs("Error: Failed to copy to clipboard\n", stderr)
+    exit(1)
+}
+
+exit(0)
