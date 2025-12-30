@@ -62,6 +62,7 @@ Plug 'ayu-theme/ayu-vim'
 " Other plugins
 Plug 'neoclide/coc.nvim', {'branch': 'release'}  " VSCode-like intellisense
 Plug 'tpope/vim-commentary'                      " Code commenting
+Plug 'tpope/vim-surround'                        " Surround text with quotes, parens, etc.
 
 call plug#end()
 
