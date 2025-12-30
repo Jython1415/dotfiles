@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Unescape overly-escaped markdown for better readability
+#
+# Explanation of heuristics:
+# 1. Unescape $ entirely (it's rarely used for Math in casual copy-paste).
+# 2. Unescape | entirely (unless you are specifically copying Markdown tables, pipes are usually text).
+# 3. Unescape [ ] entirely (mostly safe; [1] usually implies a footnote but acts as text if the footnote is missing).
+# 4. Underscores: Unescape if inside a word (e.g. file\_name -> file_name) or surrounded by spaces (foo \_ bar -> foo _ bar).
+#    Keep escaped when exactly one side has a space (emphasis markers).
+# 5. Asterisks: Unescape only if surrounded by spaces on both sides (e.g. 3 \* 4 -> 3 * 4).
+
+sed -E \
+    -e 's/\\\$/$/g' \
+    -e 's/\\\|/|/g' \
+    -e 's/\\\[/[/g' \
+    -e 's/\\\]/]/g' \
+    -e 's/([a-zA-Z0-9])\\_([a-zA-Z0-9])/\1_\2/g' \
+    -e 's/ \\_ / _ /g' \
+    -e 's/ \\\* / * /g'

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
+html-clipboard get | \
+    pandoc -f html -t gfm-raw_html | \
+    unescape-markdown | \
+    pbcopy
