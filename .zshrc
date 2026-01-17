@@ -164,14 +164,6 @@ clear_with_confirmation() {
 alias c='clear_with_confirmation'
 # alias claude='claude --model sonnet'
 alias clear='clear_with_confirmation'
-copyxlsx() {
-  local dir="${1:-.}"
-  xlcat -d "$dir" | pbcopy
-}
-copycsv() {
-  local dir="${1:-.}"
-  csvcat -d "$dir" | pbcopy
-}
 alias cwd='pwd | trim | pbcopy'
 scratch() {
   vim /tmp/scratch-$(date +%s).txt
@@ -182,7 +174,6 @@ alias reload="source ~/.zshrc"
 alias sizes="du -sch *"
 alias t="type"
 alias trim='python3 -c "import sys; print(sys.stdin.read().strip(), end=\"\")"'
-cliptagwrap() { pbpaste | tagwrap "$@" | pbcopy; }
 
 # Network
 alias getip="curl -s -w '\n' ifconfig.me/ip"

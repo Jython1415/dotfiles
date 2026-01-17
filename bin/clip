@@ -1,0 +1,253 @@
+#!/usr/bin/env bash
+# clip - Universal clipboard dispatcher
+
+set -euo pipefail
+
+# Determine DOTFILES_DIR from script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Platform detection
+detect_platform() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    COPY_CMD="pbcopy"
+    PASTE_CMD="pbpaste"
+    HTML_SUPPORT=true
+    HTML_CLIPBOARD="$DOTFILES_DIR/lib/html-clipboard"
+  elif command -v wl-copy &>/dev/null; then
+    COPY_CMD="wl-copy"
+    PASTE_CMD="wl-paste"
+    HTML_SUPPORT=false
+  elif command -v xclip &>/dev/null; then
+    COPY_CMD="xclip -selection clipboard -in"
+    PASTE_CMD="xclip -selection clipboard -out"
+    HTML_SUPPORT=false
+  else
+    echo "Error: No clipboard utility found" >&2
+    echo "Install pbcopy (macOS), wl-clipboard (Wayland), or xclip (X11)" >&2
+    exit 1
+  fi
+}
+
+# Helper function to check dependencies
+check_dependency() {
+  local dep="$1"
+  local cmd="${2:-$dep}"
+
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "Error: Required dependency '$dep' not found" >&2
+    echo "Install it and try again" >&2
+    exit 1
+  fi
+}
+
+# Helper function to check HTML support
+require_html_support() {
+  if [[ "$HTML_SUPPORT" != "true" ]]; then
+    echo "Error: HTML clipboard operations are currently only supported on macOS" >&2
+    echo "Linux support is planned for future releases" >&2
+    exit 1
+  fi
+
+  if [[ ! -x "$HTML_CLIPBOARD" ]]; then
+    echo "Error: html-clipboard helper not found or not executable" >&2
+    echo "Expected location: $HTML_CLIPBOARD" >&2
+    exit 1
+  fi
+}
+
+# Subcommand implementations
+
+cmd_get() {
+  $PASTE_CMD
+}
+
+cmd_set() {
+  $COPY_CMD
+}
+
+cmd_copy() {
+  cmd_set "$@"
+}
+
+cmd_paste() {
+  cmd_get "$@"
+}
+
+cmd_markdownify() {
+  require_html_support
+  check_dependency pandoc
+  check_dependency unescape-markdown
+
+  # Set PATH and locale for consistent behavior
+  export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+  export LC_ALL=en_US.UTF-8
+  export LANG=en_US.UTF-8
+
+  "$HTML_CLIPBOARD" get | \
+    pandoc -f html -t gfm-raw_html | \
+    unescape-markdown | \
+    $COPY_CMD
+}
+
+cmd_normalize() {
+  require_html_support
+  check_dependency pandoc
+
+  # Set PATH and locale for consistent behavior
+  export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+  export LC_ALL=en_US.UTF-8
+  export LANG=en_US.UTF-8
+
+  "$HTML_CLIPBOARD" get | \
+    pandoc -f html -t gfm-raw_html | \
+    pandoc -f gfm -t html | \
+    "$HTML_CLIPBOARD" set
+}
+
+cmd_import() {
+  local format="$1"
+  shift
+
+  case "$format" in
+    csv)
+      check_dependency csvcat
+      csvcat "$@" | $COPY_CMD
+      ;;
+    xlsx)
+      check_dependency xlcat
+      xlcat "$@" | $COPY_CMD
+      ;;
+    *)
+      echo "Error: Unknown import format '$format'" >&2
+      echo "Supported formats: csv, xlsx" >&2
+      exit 1
+      ;;
+  esac
+}
+
+cmd_wrap() {
+  check_dependency wrap
+
+  # Get clipboard, pipe through wrap, set clipboard
+  $PASTE_CMD | wrap "$@" | $COPY_CMD
+}
+
+cmd_merge() {
+  check_dependency clipmerge
+
+  # Check for Alfred database (clipmerge will provide its own error if missing)
+  # Just pass through to clipmerge
+  exec clipmerge "$@"
+}
+
+cmd_help() {
+  cat <<'EOF'
+clip - Universal clipboard dispatcher
+
+USAGE:
+  clip <subcommand> [args...]
+
+SUBCOMMANDS:
+  get                           Get text from clipboard
+  set                           Set clipboard from stdin
+  copy                          Alias for 'set'
+  paste                         Alias for 'get'
+
+  markdownify                   Convert HTML in clipboard to Markdown (macOS only)
+  normalize                     Clean up HTML in clipboard (macOS only)
+
+  import csv [FILE] [-d DIR]    Import CSV to clipboard
+  import xlsx [FILE] [-d DIR]   Import Excel to clipboard
+
+  wrap TAG [...args]            Wrap clipboard content in XML tags
+                                (equivalent to: clip get | wrap TAG | clip set)
+
+  merge [...args]               Merge entries from Alfred clipboard history (macOS only)
+
+  help                          Show this help message
+
+EXAMPLES:
+  # Basic clipboard operations
+  echo "Hello" | clip set
+  clip get
+
+  # HTML operations (macOS only)
+  clip markdownify              # Convert HTML clipboard to Markdown
+  clip normalize                # Clean up HTML formatting
+
+  # Import data
+  clip import csv data.csv
+  clip import xlsx -d ~/Downloads
+
+  # Wrap content in tags
+  clip wrap content -a type=text
+  clip wrap greeting --inline
+
+  # Merge clipboard history
+  clip merge
+  clip merge last 5
+
+PLATFORM SUPPORT:
+  - macOS: Full support (pbcopy/pbpaste + HTML operations)
+  - Linux (Wayland): wl-copy/wl-paste (HTML support planned)
+  - Linux (X11): xclip (HTML support planned)
+
+For subcommand-specific help, run the underlying tool with --help:
+  wrap --help
+  csvcat --help
+  xlcat --help
+  clipmerge --help
+EOF
+}
+
+# Main dispatcher
+main() {
+  if [[ $# -eq 0 ]]; then
+    cmd_help
+    exit 0
+  fi
+
+  local subcommand="$1"
+  shift
+
+  # Show help without requiring clipboard utilities
+  if [[ "$subcommand" == "help" || "$subcommand" == "--help" || "$subcommand" == "-h" ]]; then
+    cmd_help
+    exit 0
+  fi
+
+  # Detect platform for all other commands
+  detect_platform
+
+  case "$subcommand" in
+    get|paste)
+      cmd_get "$@"
+      ;;
+    set|copy)
+      cmd_set "$@"
+      ;;
+    markdownify)
+      cmd_markdownify "$@"
+      ;;
+    normalize)
+      cmd_normalize "$@"
+      ;;
+    import)
+      cmd_import "$@"
+      ;;
+    wrap)
+      cmd_wrap "$@"
+      ;;
+    merge)
+      cmd_merge "$@"
+      ;;
+    *)
+      echo "Error: Unknown subcommand '$subcommand'" >&2
+      echo "Run 'clip help' for usage information" >&2
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"
