@@ -4,7 +4,7 @@
 # dependencies = []
 # ///
 """
-tagwrap - Wrap text in XML tags
+wrap - Wrap text in XML tags
 
 Simple utility to wrap stdin content in XML tags with optional attributes.
 """
@@ -26,16 +26,16 @@ def parse_args():
         epilog="""
 Examples:
   # Block style (default)
-  pbpaste | tagwrap content
+  pbpaste | wrap content
 
   # Inline style
-  echo "Hello" | tagwrap greeting --inline
+  echo "Hello" | wrap greeting --inline
 
   # With attributes
-  cat file.txt | tagwrap content -a type=text -a lang=en
+  cat file.txt | wrap content -a type=text -a lang=en
 
   # With indentation
-  pbpaste | tagwrap content -i 2
+  pbpaste | wrap content -i 2
         """.strip()
     )
 
