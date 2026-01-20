@@ -106,8 +106,40 @@ cmd_normalize() {
 }
 
 cmd_import() {
-  local format="$1"
+  local format="${1:-}"
+
+  # Handle help flags
+  if [[ "$format" == "--help" || "$format" == "-h" || "$format" == "help" ]]; then
+    echo "Usage: clip import <format> [args...]"
+    echo ""
+    echo "Formats: csv, xlsx"
+    echo ""
+    echo "For format-specific help:"
+    echo "  csvcat --help"
+    echo "  xlcat --help"
+    exit 0
+  fi
+
+  if [[ -z "$format" ]]; then
+    echo "Error: Missing format argument" >&2
+    echo "Usage: clip import <format> [args...]" >&2
+    echo "Supported formats: csv, xlsx" >&2
+    exit 1
+  fi
+
   shift
+
+  # Handle help for specific import format
+  if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    case "$format" in
+      csv)
+        exec csvcat --help
+        ;;
+      xlsx)
+        exec xlcat --help
+        ;;
+    esac
+  fi
 
   case "$format" in
     csv)
@@ -127,6 +159,11 @@ cmd_import() {
 }
 
 cmd_wrap() {
+  # Handle help flags by running wrap directly
+  if [[ "${1:-}" == "--help" || "${1:-}" == "-h" || "${1:-}" == "help" ]]; then
+    exec wrap --help
+  fi
+
   check_dependency wrap
 
   # Get clipboard, pipe through wrap, set clipboard
