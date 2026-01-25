@@ -1,0 +1,162 @@
+#compdef clip
+
+# Zsh completion for clip - Universal clipboard dispatcher
+
+_clip() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  # Detect platform for conditional completions
+  local html_support=false
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    html_support=true
+  fi
+
+  _arguments -C \
+    '1: :_clip_commands' \
+    '*::arg:->args' \
+    && return 0
+
+  case $state in
+    args)
+      case $words[1] in
+        import)
+          _clip_import
+          ;;
+        merge)
+          _clip_merge
+          ;;
+        wrap)
+          _clip_wrap
+          ;;
+        get|paste|set|copy)
+          # These commands take no arguments (besides help flags)
+          _clip_help_flags
+          ;;
+        markdownify|normalize)
+          # These commands take no arguments (besides help flags)
+          _clip_help_flags
+          ;;
+        help)
+          # help can take a subcommand name
+          _clip_commands
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_clip_commands() {
+  local -a commands
+
+  # Platform-specific commands
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    commands=(
+      'get:Retrieve text from clipboard'
+      'paste:Retrieve text from clipboard (alias for get)'
+      'set:Write text to clipboard from stdin'
+      'copy:Write text to clipboard from stdin (alias for set)'
+      'markdownify:Convert HTML clipboard content to Markdown (macOS only)'
+      'normalize:Clean up HTML formatting in clipboard (macOS only)'
+      'import:Import data to clipboard (csv or xlsx)'
+      'wrap:Wrap clipboard content in XML tags'
+      'merge:Merge entries from Alfred clipboard history (macOS only)'
+      'help:Display help message'
+    )
+  else
+    commands=(
+      'get:Retrieve text from clipboard'
+      'paste:Retrieve text from clipboard (alias for get)'
+      'set:Write text to clipboard from stdin'
+      'copy:Write text to clipboard from stdin (alias for set)'
+      'import:Import data to clipboard (csv or xlsx)'
+      'wrap:Wrap clipboard content in XML tags'
+      'help:Display help message'
+    )
+  fi
+
+  _describe -t commands 'clip command' commands
+}
+
+_clip_import() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1: :_clip_import_formats' \
+    '2:file:_files' \
+    '-d[directory]:directory:_directories' \
+    '(-h --help)'{-h,--help}'[show help message]' \
+    && return 0
+}
+
+_clip_import_formats() {
+  local -a formats
+  formats=(
+    'csv:Import CSV data'
+    'xlsx:Import Excel data'
+  )
+  _describe -t formats 'import format' formats
+}
+
+_clip_merge() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1: :_clip_merge_modes' \
+    '*::arg:->args' \
+    && return 0
+
+  case $state in
+    args)
+      case $words[1] in
+        interactive|search)
+          _arguments \
+            '(-l --limit)'{-l,--limit}'[limit number of entries]:limit:(10 20 30 50 100)' \
+            '(-h --help)'{-h,--help}'[show help message]'
+          ;;
+        last)
+          _arguments \
+            '1:count:(5 10 20 30)' \
+            '--sep[separator]:separator:(newline space comma tab comma-space double-newline)' \
+            '(-h --help)'{-h,--help}'[show help message]'
+          ;;
+        range)
+          _arguments \
+            '1:start:' \
+            '2:end:' \
+            '--sep[separator]:separator:(newline space comma tab comma-space double-newline)' \
+            '(-h --help)'{-h,--help}'[show help message]'
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_clip_merge_modes() {
+  local -a modes
+  modes=(
+    'interactive:Browse and select entries interactively (default)'
+    'last:Merge last N entries'
+    'range:Merge entries in range'
+    'search:Search then select entries'
+  )
+  _describe -t modes 'merge mode' modes
+}
+
+_clip_wrap() {
+  _arguments \
+    '1:tag:' \
+    '-a[add attributes]:attributes:' \
+    '-i[inline mode]' \
+    '--inline[inline mode]' \
+    '(-h --help)'{-h,--help}'[show help message]'
+}
+
+_clip_help_flags() {
+  _arguments \
+    '(-h --help)'{-h,--help}'[show help message]'
+}
+
+_clip "$@"
