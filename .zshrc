@@ -61,6 +61,9 @@ plugins=(git virtualenv dirhistory)
 # - https://claude.ai/chat/a7bde7d6-a233-463a-a795-8d6914a46ca2
 zstyle ':omz:alpha:lib:git' async-prompt "false"
 
+# Load custom completions
+fpath=($HOME/.dotfiles/completions $fpath)
+
 source $ZSH/oh-my-zsh.sh
 # disable grep aliases
 unalias grep 2>/dev/null
