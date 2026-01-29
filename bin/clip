@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # Determine DOTFILES_DIR from script location
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 DOTFILES_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Platform detection
