@@ -31,12 +31,30 @@ def extract_video_id(url):
     
     return None
 
+def format_timestamp(seconds):
+    """Format seconds into [H:MM:SS] or [M:SS] timestamp"""
+    total = int(seconds)
+    h, remainder = divmod(total, 3600)
+    m, s = divmod(remainder, 60)
+    if h > 0:
+        return f"[{h}:{m:02d}:{s:02d}]"
+    return f"[{m}:{s:02d}]"
+
 def main():
-    parser = argparse.ArgumentParser(description='Get YouTube video transcript')
+    parser = argparse.ArgumentParser(
+        description='Get YouTube video transcript',
+        epilog="""Examples:
+  yt-transcript https://youtu.be/abc123             # Plain text
+  yt-transcript https://youtu.be/abc123 -t          # With timestamps
+  yt-transcript abc123 --raw                        # Full JSON""",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument('url', help='YouTube URL or video ID')
-    parser.add_argument('--raw', action='store_true', 
+    parser.add_argument('-t', '--timestamps', action='store_true',
+                       help='Prefix each line with a timestamp')
+    parser.add_argument('--raw', action='store_true',
                        help='Output full JSON with duration and timestamps')
-    
+
     args = parser.parse_args()
     
     # Extract video ID
@@ -54,9 +72,11 @@ def main():
             # Output full JSON
             print(json.dumps(transcript.to_raw_data(), indent=2))
         else:
-            # Output just the text
             for snippet in transcript.snippets:
-                print(snippet.text)
+                if args.timestamps:
+                    print(f"{format_timestamp(snippet.start)} {snippet.text}")
+                else:
+                    print(snippet.text)
                 
     except Exception as e:
         print(f"Error fetching transcript: {e}", file=sys.stderr)
