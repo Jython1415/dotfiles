@@ -280,6 +280,7 @@ log "Regular and minimal themes symlinked successfully"
 # Symlink dotfiles
 ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
 ln -sf "$DOTFILES_DIR/.zshenv" "$HOME/.zshenv"
+ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 
 # Configure global gitignore
 ln -sf "$DOTFILES_DIR/.gitignore_global" "$HOME/.gitignore_global"

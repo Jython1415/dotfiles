@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# tmux-dev - Create tmux sessions with CC + shell side-by-side pane layout
+#
+# Creates a named tmux session with a 2-pane layout per project:
+# - Left pane: CC (Claude Code)
+# - Right pane: shell
+#
+# Usage:
+#   tmux-dev                        # Session from current directory
+#   tmux-dev /path/to/project       # Session from specified path
+#   tmux-dev /path/to/project1 /path/to/project2  # Multiple projects
+
+set -euo pipefail
+
+# ============================================================================
+# FUNCTIONS
+# ============================================================================
+
+# Normalize path and extract basename for session name
+get_session_name() {
+    local path="${1:-.}"
+    local abs_path
+    abs_path="$(cd "$path" 2>/dev/null && pwd)" || {
+        echo "Error: Directory does not exist: $path" >&2
+        return 1
+    }
+
+    # Use basename, sanitize for tmux (alphanumeric, dash, underscore)
+    local basename
+    basename="$(basename "$abs_path")"
+    echo "${basename//[^a-zA-Z0-9_-]/_}"
+}
+
+# Create session with CC + shell layout
+create_session() {
+    local dir="$1"
+    local session_name="$2"
+
+    # Expand to absolute path
+    local abs_path
+    abs_path="$(cd "$dir" && pwd)"
+
+    # Check if session already exists
+    if tmux has-session -t "$session_name" 2>/dev/null; then
+        echo "Session '$session_name' already exists"
+        tmux attach-session -t "$session_name"
+        return 0
+    fi
+
+    # Create new session with first pane (CC)
+    tmux new-session -d -s "$session_name" -x 120 -y 40 -c "$abs_path"
+
+    # Split into two panes (left=CC, right=shell)
+    tmux split-window -h -t "$session_name" -c "$abs_path"
+
+    # Set up pane layout: left pane gets CC, right pane for shell
+    # Left pane (index 0): CC
+    tmux send-keys -t "$session_name:0.0" "# Claude Code (CC)" Enter
+
+    # Right pane (index 1): shell prompt ready
+    tmux send-keys -t "$session_name:0.1" "# Shell ready" Enter
+
+    # Set pane widths (roughly 50/50)
+    tmux select-layout -t "$session_name" even-horizontal
+
+    # Focus on left pane (CC) to start
+    tmux select-pane -t "$session_name:0.0"
+
+    # Attach to the session
+    tmux attach-session -t "$session_name"
+}
+
+# ============================================================================
+# MAIN
+# ============================================================================
+
+if [[ $# -eq 0 ]]; then
+    # No arguments: use current directory
+    dir="."
+    session_name=$(get_session_name "$dir") || exit 1
+    create_session "$dir" "$session_name"
+elif [[ $# -eq 1 ]]; then
+    # Single argument: project directory
+    dir="$1"
+    session_name=$(get_session_name "$dir") || exit 1
+    create_session "$dir" "$session_name"
+else
+    # Multiple arguments: create sessions for each
+    for project_dir in "$@"; do
+        session_name=$(get_session_name "$project_dir") || continue
+        echo "Creating session: $session_name ($project_dir)"
+        create_session "$project_dir" "$session_name"
+    done
+fi
