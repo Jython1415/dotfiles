@@ -165,7 +165,6 @@ clear_with_confirmation() {
   fi
 }
 alias c='clear_with_confirmation'
-# alias claude='claude --model sonnet'
 alias clear='clear_with_confirmation'
 alias cwd='pwd | trim | pbcopy'
 scratch() {
@@ -204,6 +203,8 @@ alias dcu='docker-compose up'
 alias dcd='docker-compose down'
 # <<< Personal Convenience Aliases and Functions <<<
 
+# Claude Code
+alias claude='/Users/Joshua/.local/bin/claude'
 
 # Tailscale
 alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
