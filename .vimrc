@@ -19,6 +19,14 @@ set nowritebackup
 let &t_SI = "\e[6 q"       " Use vertical bar cursor in insert mode
 let &t_EI = "\e[2 q"       " Use block cursor in normal mode
 
+" Bracketed paste support (fixes È characters when pasting in tmux)
+if &term =~ '^\%(screen\|tmux\)'
+    let &t_BE = "\e[?2004h"    " Enable bracketed paste mode
+    let &t_BD = "\e[?2004l"    " Disable bracketed paste mode
+    let &t_PS = "\e[200~"      " Paste start marker
+    let &t_PE = "\e[201~"      " Paste end marker
+endif
+
 " Filetype-specific settings
 " Enable filetype detection
 filetype plugin indent on
