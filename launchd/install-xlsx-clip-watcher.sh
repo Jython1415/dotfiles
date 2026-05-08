@@ -3,7 +3,7 @@
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 SCRIPT="$DOTFILES_DIR/launchd/scripts/xlsx-clip-watcher.sh"
-LOG="/tmp/xlsx-clip-watcher.log"
+LOG="$HOME/.local/state/xlsx-clip-watcher/watcher.log"
 
 echo "=== install-xlsx-clip-watcher $(date +%H:%M:%S) ==="
 echo "  dotfiles: $DOTFILES_DIR"
