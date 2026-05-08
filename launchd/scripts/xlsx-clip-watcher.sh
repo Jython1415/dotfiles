@@ -8,10 +8,19 @@ export PATH="$HOME/.local/bin:$HOME/bin:$HOME/.dotfiles/bin:/opt/homebrew/bin:/u
 DOWNLOADS="$HOME/Downloads"
 STATE_DIR="$HOME/.local/state/xlsx-clip-watcher"
 SEEN_FILE="$STATE_DIR/seen.txt"
+LOCK_FILE="$STATE_DIR/watcher.lock"
 
 mkdir -p "$STATE_DIR"
 
 log() { echo "[xlsx-clip-watcher] $(date '+%Y-%m-%d %H:%M:%S') $*"; }
+
+# Ensure only one instance runs; flock releases automatically on exit/crash
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    log "another instance already running (PID $(cat "$LOCK_FILE" 2>/dev/null)), exiting"
+    exit 0
+fi
+echo $$ > "$LOCK_FILE"
 
 check_and_import() {
     local new_inodes=()
