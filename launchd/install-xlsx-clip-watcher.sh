@@ -43,4 +43,18 @@ echo ""
 echo "Log:   tail -f $LOG"
 echo "State: $HOME/.local/state/xlsx-clip-watcher/seen.txt"
 echo ""
-echo "Done. Watcher active (FSEvents, no polling)."
+echo "Done. Watcher active (FSEvents, no polling).
+
+# --- auto-updater: polls GitHub every 5min and reinstalls on new commits ---
+AUTO_UPDATER="$DOTFILES_DIR/launchd/scripts/dotfiles-auto-updater.sh"
+AUTO_LOG="$HOME/.local/state/xlsx-clip-watcher/auto-updater.log"
+chmod +x "$AUTO_UPDATER"
+pkill -f "dotfiles-auto-updater.sh" 2>/dev/null && sleep 1
+nohup /bin/bash "$AUTO_UPDATER" >> "$AUTO_LOG" 2>&1 &
+echo "  auto-updater: PID $!"
+AU_REBOOT="@reboot /bin/bash $AUTO_UPDATER >> $AUTO_LOG 2>&1 &  # xlsx-clip-watcher-updater"
+AU_WATCHDOG="* * * * * pgrep -qf dotfiles-auto-updater.sh || /bin/bash $AUTO_UPDATER >> $AUTO_LOG 2>&1 &  # xlsx-clip-watcher-updater"
+(crontab -l 2>/dev/null | grep -v "xlsx-clip-watcher-updater" || true
+ echo "$AU_REBOOT"
+ echo "$AU_WATCHDOG") | crontab -
+echo "  auto-updater crontab: @reboot + 1-min watchdog""
