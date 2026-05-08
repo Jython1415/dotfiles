@@ -8,6 +8,7 @@ TEMPLATE="$DOTFILES_DIR/launchd/agents/com.joshuashew.xlsx-clip-watcher.plist.te
 PLIST_DIR="$HOME/Library/LaunchAgents"
 PLIST_DEST="$PLIST_DIR/com.joshuashew.xlsx-clip-watcher.plist"
 LABEL="com.joshuashew.xlsx-clip-watcher"
+DOMAIN="gui/$(id -u)"
 
 echo "=== install-xlsx-clip-watcher $(date +%H:%M:%S) ==="
 echo "  dotfiles: $DOTFILES_DIR"
@@ -20,12 +21,17 @@ chmod +x "$DOTFILES_DIR/launchd/scripts/xlsx-clip-watcher.sh"
 echo "  script marked executable"
 
 if launchctl list | grep -q "$LABEL"; then
-    launchctl unload "$PLIST_DEST" 2>/dev/null || true
+    launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || launchctl unload "$PLIST_DEST" 2>/dev/null || true
     echo "  unloaded previous version"
 fi
 
-launchctl load "$PLIST_DEST"
-echo "  loaded: $LABEL"
+if launchctl bootstrap "$DOMAIN" "$PLIST_DEST" 2>/dev/null; then
+    echo "  loaded: $LABEL (bootstrap)"
+else
+    launchctl load "$PLIST_DEST" 2>/dev/null || true
+    echo "  loaded: $LABEL (legacy load)"
+fi
+
 echo ""
 echo "Log:   tail -f /tmp/xlsx-clip-watcher.log"
 echo "State: $HOME/.local/state/xlsx-clip-watcher/seen.txt"
