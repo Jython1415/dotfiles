@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.joshuashew.xlsx-clip-watcher</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>$HOME/.dotfiles/launchd/scripts/xlsx-clip-watcher.sh</string>
+    </array>
+    <key>WatchPaths</key>
+    <array>
+        <string>$HOME/Downloads</string>
+    </array>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/tmp/xlsx-clip-watcher.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/xlsx-clip-watcher.log</string>
+</dict>
+</plist>
