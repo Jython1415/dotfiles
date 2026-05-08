@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # dotfiles-auto-updater — polls for new dotfiles commits and reinstalls on change.
-# Detects updates every 5 minutes; runs install-xlsx-clip-watcher.sh on change.
 
 export PATH="$HOME/.local/bin:$HOME/bin:$HOME/.dotfiles/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
@@ -12,12 +11,13 @@ INTERVAL=300
 mkdir -p "$STATE_DIR"
 log() { echo "[dotfiles-auto-updater] $(date '+%Y-%m-%d %H:%M:%S') $*"; }
 
+trap 'kill 0 2>/dev/null; exit 0' SIGTERM SIGINT
+
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
     log "another instance already running, exiting"
     exit 0
 fi
-echo $$ > "$LOCK_FILE"
 
 log "starting (PID $$)"
 
@@ -32,7 +32,7 @@ while true; do
             log "update complete"
         fi
     else
-        log "git fetch failed (network or auth), skipping this cycle"
+        log "git fetch failed (network or auth), skipping"
     fi
     sleep "$INTERVAL"
 done
