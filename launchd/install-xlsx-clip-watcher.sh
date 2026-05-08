@@ -23,9 +23,10 @@ echo "  script marked executable"
 if launchctl list | grep -q "$LABEL"; then
     launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || launchctl unload "$PLIST_DEST" 2>/dev/null || true
     echo "  unloaded previous version"
+    sleep 1
 fi
 
-if launchctl bootstrap "$DOMAIN" "$PLIST_DEST" 2>/dev/null; then
+if launchctl bootstrap "$DOMAIN" "$PLIST_DEST"; then
     echo "  loaded: $LABEL (bootstrap)"
 else
     launchctl load "$PLIST_DEST" 2>/dev/null || true
@@ -36,4 +37,4 @@ echo ""
 echo "Log:   tail -f /tmp/xlsx-clip-watcher.log"
 echo "State: $HOME/.local/state/xlsx-clip-watcher/seen.txt"
 echo ""
-echo "Done. Drop an .xlsx file < 500KB into ~/Downloads to test."
+echo "Done. Agent polls every 5s — clipboard updates within 5s of a new download."
