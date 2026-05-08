@@ -22,14 +22,19 @@ fi
 log "starting (PID $$)"
 
 while true; do
-    BEFORE=$(git -C "$DOTFILES" rev-parse HEAD 2>/dev/null)
     if git -C "$DOTFILES" fetch origin main --quiet 2>/dev/null; then
-        AFTER=$(git -C "$DOTFILES" rev-parse origin/main 2>/dev/null)
-        if [ "$BEFORE" != "$AFTER" ]; then
-            log "new commits: ${BEFORE:0:8} -> ${AFTER:0:8}, updating"
+        # Count commits in origin/main not yet in HEAD. Using rev-list rather
+        # than comparing SHAs directly handles merge-pull (where HEAD is a merge
+        # commit with a different SHA than origin/main but already contains it).
+        BEHIND=$(git -C "$DOTFILES" rev-list HEAD..origin/main --count 2>/dev/null || echo 0)
+        if [ "${BEHIND:-0}" -gt 0 ]; then
+            log "$BEHIND new commit(s) on origin/main, updating"
             git -C "$DOTFILES" pull origin main 2>&1
-            bash "$DOTFILES/launchd/install-xlsx-clip-watcher.sh" 2>&1
-            log "update complete"
+            # XLSX_UPDATER_RUN=1 tells the installer to skip auto-updater
+            # management (avoids killing itself mid-install via the trap).
+            XLSX_UPDATER_RUN=1 bash "$DOTFILES/launchd/install-xlsx-clip-watcher.sh" 2>&1
+            log "update complete — exiting so cron restarts with new code"
+            exit 0
         fi
     else
         log "git fetch failed (network or auth), skipping"
