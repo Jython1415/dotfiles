@@ -34,7 +34,7 @@ nohup /bin/bash "$SCRIPT" >> "$LOG" 2>&1 &
 echo "  watcher: started PID $!"
 
 # Auto-updater management: skipped when called from the auto-updater itself
-# (XLSX_UPDATER_RUN=1) to avoid the updater killing itself via its SIGTERM trap.
+# (XLSX_UPDATER_RUN=1) to avoid the updater killing itself mid-install via the trap.
 if [ "${XLSX_UPDATER_RUN:-}" != "1" ]; then
     pkill -f "dotfiles-auto-updater.sh" 2>/dev/null && echo "  auto-updater: stopped"
     sleep 1
