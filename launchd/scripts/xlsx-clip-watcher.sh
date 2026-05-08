@@ -14,13 +14,16 @@ mkdir -p "$STATE_DIR"
 
 log() { echo "[xlsx-clip-watcher] $(date '+%Y-%m-%d %H:%M:%S') $*"; }
 
-# Ensure only one instance runs; flock releases automatically on exit/crash
+# Kill entire process group on SIGTERM so fswatch and the while-loop subshell
+# (which inherit the flock fd) are cleaned up — otherwise pkill leaves orphans
+# that hold the lock and cause every restart to immediately exit.
+trap 'kill 0 2>/dev/null; exit 0' SIGTERM SIGINT
+
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
-    log "another instance already running (PID $(cat "$LOCK_FILE" 2>/dev/null)), exiting"
+    log "another instance already running, exiting"
     exit 0
 fi
-echo $$ > "$LOCK_FILE"
 
 check_and_import() {
     local new_inodes=()
@@ -46,12 +49,9 @@ check_and_import() {
 }
 
 log "starting up (PID $$)"
-
-# Startup scan: catch files downloaded while watcher was down
 check_and_import
 log "startup scan complete, entering fswatch loop"
 
-# FSEvents watch — kernel notifies on .xlsx events, zero polling
 fswatch -0 -e ".*" -i ".*\\.xlsx$" "$DOWNLOADS" | \
 while IFS= read -r -d '' _event; do
     check_and_import
