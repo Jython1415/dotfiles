@@ -9,12 +9,8 @@
         <string>/bin/bash</string>
         <string>$HOME/.dotfiles/launchd/scripts/xlsx-clip-watcher.sh</string>
     </array>
-    <key>WatchPaths</key>
-    <array>
-        <string>$HOME/Downloads</string>
-    </array>
     <key>StartInterval</key>
-    <integer>30</integer>
+    <integer>5</integer>
     <key>RunAtLoad</key>
     <false/>
     <key>StandardOutPath</key>
