@@ -23,7 +23,7 @@ chmod +x "$SCRIPT"
 # Stop any running instance (and its fswatch child) before restarting.
 pkill -f "xlsx-clip-watcher.sh" 2>/dev/null && echo "  watcher: stopped"
 pkill -f "fswatch.*Downloads" 2>/dev/null && echo "  fswatch: stopped"
-sleep 1
+sleep 3
 
 nohup /bin/bash "$SCRIPT" >> "$LOG" 2>&1 &
 echo "  watcher: started PID $!"
