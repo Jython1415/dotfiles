@@ -29,7 +29,7 @@ nohup /bin/bash "$SCRIPT" >> "$LOG" 2>&1 &
 echo "  watcher: started PID $!"
 
 REBOOT_W="@reboot /bin/bash $SCRIPT >> $LOG 2>&1 &  # xlsx-clip-watcher"
-WATCHDOG_W="* * * * * pgrep -qf xlsx-clip-watcher.sh || /bin/bash $SCRIPT >> $LOG 2>&1 &  # xlsx-clip-watcher"
+WATCHDOG_W="* * * * * flock -n $STATE_DIR/watcher.lock true && /bin/bash $SCRIPT >> $LOG 2>&1 &  # xlsx-clip-watcher"
 
 # crontab write may fail in non-interactive contexts (macOS permission model).
 # Non-fatal: crontab from the initial interactive install persists.
