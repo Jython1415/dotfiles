@@ -25,6 +25,10 @@ pkill -f "xlsx-clip-watcher.sh" 2>/dev/null && echo "  watcher: stopped"
 pkill -f "fswatch.*Downloads" 2>/dev/null && echo "  fswatch: stopped"
 sleep 3
 
+# Delete the lock file so the new watcher gets a fresh inode.
+# Any surviving subshell still holds flock on the deleted inode (harmless).
+rm -f "$STATE_DIR/watcher.lock" && echo "  lock: cleared" 
+
 nohup /bin/bash "$SCRIPT" >> "$LOG" 2>&1 &
 echo "  watcher: started PID $!"
 
