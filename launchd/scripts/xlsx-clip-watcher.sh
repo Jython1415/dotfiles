@@ -68,6 +68,6 @@ log "startup scan complete, entering fswatch loop"
 fswatch -0 -e ".*" -i ".*\\.xlsx$" "$DOWNLOADS" | \
 while IFS= read -r -d '' _event; do
     check_and_import
-done
+done 9>&-
 
 log "fswatch exited unexpectedly (will be restarted by watchdog)"
