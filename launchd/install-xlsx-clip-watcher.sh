@@ -1,47 +1,61 @@
 #!/usr/bin/env bash
-# install-xlsx-clip-watcher.sh — starts watcher, sets up cron persistence.
-# Deploy via: POST /proxy/dashboard/admin/deploy/dotfiles
+# install-xlsx-clip-watcher.sh — idempotent install/reload of the watcher.
+# Run after pulling dotfiles updates: bash ~/.dotfiles/launchd/install-xlsx-clip-watcher.sh
+
+set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
-SCRIPT="$DOTFILES_DIR/launchd/scripts/xlsx-clip-watcher.sh"
+TEMPLATE="$DOTFILES_DIR/launchd/agents/com.joshuashew.xlsx-clip-watcher.plist.template"
+PLIST_DEST="$HOME/Library/LaunchAgents/com.joshuashew.xlsx-clip-watcher.plist"
+LABEL="com.joshuashew.xlsx-clip-watcher"
 STATE_DIR="$HOME/.local/state/xlsx-clip-watcher"
-LOG="$STATE_DIR/watcher.log"
 
+echo "=== install-xlsx-clip-watcher $(date '+%H:%M:%S') ==="
+echo "  dotfiles:  $DOTFILES_DIR"
+
+# 1. Create state dir so launchd can open the log file before the script runs
 mkdir -p "$STATE_DIR"
+echo "  state dir: $STATE_DIR"
 
-echo "=== install-xlsx-clip-watcher $(date +%H:%M:%S) ==="
-echo "  dotfiles: $DOTFILES_DIR"
-
-if ! command -v fswatch &>/dev/null; then
-    echo "  installing fswatch via brew..."
-    brew install fswatch || { echo "  ERROR: brew install fswatch failed"; exit 1; }
+# 2. Pre-warm uv cache for xlcat so the first real trigger doesn't stall
+echo "  warming xlcat uv cache..."
+if command -v uv &>/dev/null && [[ -x "$DOTFILES_DIR/bin/xlcat" ]]; then
+  echo '# dummy xlsx to warm cache' | \
+    timeout 60 uv run "$DOTFILES_DIR/bin/xlcat" /dev/null 2>/dev/null || true
+  echo "  xlcat: cache warm (exit ignored — /dev/null not a valid xlsx)"
+else
+  echo "  xlcat: skipped (uv or xlcat not found)"
 fi
-echo "  fswatch: $(command -v fswatch)"
 
-chmod +x "$SCRIPT"
+# 3. Remove legacy crontab entries (old design used @reboot + watchdog)
+if crontab -l 2>/dev/null | grep -q "xlsx-clip-watcher"; then
+  (crontab -l 2>/dev/null | grep -v "xlsx-clip-watcher") | crontab - && \
+    echo "  crontab: removed legacy entries" || \
+    echo "  crontab: could not remove (non-interactive — OK)"
+else
+  echo "  crontab: no legacy entries"
+fi
 
-# Stop any running instance (and its fswatch child) before restarting.
-pkill -f "xlsx-clip-watcher.sh" 2>/dev/null && echo "  watcher: stopped"
-pkill -f "fswatch.*Downloads" 2>/dev/null && echo "  fswatch: stopped"
-sleep 3
+# 4. Unload old agent (ignore errors if not loaded)
+launchctl unload "$PLIST_DEST" 2>/dev/null && echo "  agent: unloaded" || echo "  agent: was not loaded"
 
-# Delete the lock file so the new watcher gets a fresh inode.
-# Any surviving subshell still holds flock on the deleted inode (harmless).
-rm -f "$STATE_DIR/watcher.lock" && echo "  lock: cleared" 
+# Kill any leftover daemon-mode processes from the old design
+pkill -f "xlsx-clip-watcher.sh" 2>/dev/null && echo "  old process: stopped" || true
+pkill -f "fswatch.*Downloads"   2>/dev/null && echo "  fswatch: stopped"    || true
+rm -f "$STATE_DIR/watcher.lock"
 
-nohup /bin/bash "$SCRIPT" >> "$LOG" 2>&1 &
-echo "  watcher: started PID $!"
+# 5. Build plist from template (substitute DOTFILES_DIR and HOME_DIR)
+sed \
+  -e "s|DOTFILES_DIR|$DOTFILES_DIR|g" \
+  -e "s|HOME_DIR|$HOME|g" \
+  "$TEMPLATE" > "$PLIST_DEST"
+echo "  plist: installed → $PLIST_DEST"
 
-REBOOT_W="@reboot /bin/bash $SCRIPT >> $LOG 2>&1 &  # xlsx-clip-watcher"
-WATCHDOG_W="* * * * * flock -n $STATE_DIR/watcher.lock true && /bin/bash $SCRIPT >> $LOG 2>&1 &  # xlsx-clip-watcher"
-
-# crontab write may fail in non-interactive contexts (macOS permission model).
-# Non-fatal: crontab from the initial interactive install persists.
-(crontab -l 2>/dev/null | grep -v "xlsx-clip-watcher" || true
- echo "$REBOOT_W"
- echo "$WATCHDOG_W") | crontab - 2>/dev/null && echo "  crontab: updated" || echo "  crontab: skipped (non-interactive; prior entries still active)"
+# 6. Load the new agent
+launchctl load "$PLIST_DEST"
+echo "  agent: loaded"
 
 echo ""
-echo "Log: tail -f $LOG"
-echo "State: $STATE_DIR/seen.txt"
+echo "Watching ~/Downloads for ScheduleAtAGlance*.xlsx files."
+echo "Log: tail -f $STATE_DIR/watcher.log"
 echo "Done."
