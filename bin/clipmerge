@@ -405,6 +405,9 @@ Notes:
         """.strip()
     )
 
+    parser.add_argument('-l', '--limit', type=int, default=30,
+                       help='Number of recent entries to show in interactive mode (default: 30)')
+
     subparsers = parser.add_subparsers(dest='mode', help='Operation mode')
 
     # Interactive mode (default)
