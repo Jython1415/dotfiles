@@ -7,15 +7,23 @@
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>$HOME/.dotfiles/launchd/scripts/xlsx-clip-watcher.sh</string>
+        <string>DOTFILES_DIR/launchd/scripts/xlsx-clip-watcher.sh</string>
     </array>
-    <key>KeepAlive</key>
-    <true/>
+    <!-- WatchPaths: launchd watches ~/Downloads natively; no fswatch needed -->
+    <key>WatchPaths</key>
+    <array>
+        <string>HOME_DIR/Downloads</string>
+    </array>
+    <!-- Run once at load to catch any file that landed before the agent started -->
     <key>RunAtLoad</key>
     <true/>
+    <!-- Throttle: don't re-trigger more than once per 5 seconds -->
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
+    <!-- Log to state dir (created by install script before plist is loaded) -->
     <key>StandardOutPath</key>
-    <string>/tmp/xlsx-clip-watcher.log</string>
+    <string>HOME_DIR/.local/state/xlsx-clip-watcher/launchd.log</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/xlsx-clip-watcher.log</string>
+    <string>HOME_DIR/.local/state/xlsx-clip-watcher/launchd.log</string>
 </dict>
 </plist>
