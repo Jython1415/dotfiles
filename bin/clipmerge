@@ -237,10 +237,11 @@ def interactive_mode(db: ClipboardDB, limit: int = 30):
     # Show preview
     print(f"\nMerged result ({len(merged)} chars):")
     print("-" * 80)
-    preview_lines = merged.split('\n')[:10]
+    all_lines = merged.split('\n')
+    preview_lines = all_lines[:10]
     print('\n'.join(preview_lines))
-    if len(preview_lines) < len(merged.split('\n')):
-        print(f"... ({len(merged.split('\n')) - len(preview_lines)} more lines)")
+    if len(preview_lines) < len(all_lines):
+        print(f"... ({len(all_lines) - len(preview_lines)} more lines)")
     print("-" * 80)
 
     # Confirm
