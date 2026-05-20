@@ -59,14 +59,19 @@ tell application "System Events"
     set folder actions enabled to true
     set dlHFS to (path to downloads folder) as text
 
-    -- Remove existing to ensure clean state (idempotent)
+    -- Idempotent: iterate all folder actions and delete any matching Downloads.
+    -- The "if exists" pattern is unreliable (path lookup quirk returns false even
+    -- when the action exists), so we iterate and match instead.
     try
-        if exists folder action dlHFS then
-            delete folder action dlHFS
-        end if
+        set allFAs to every folder action
+        repeat with fa in allFAs
+            if path of fa is dlHFS then
+                delete fa
+            end if
+        end repeat
     end try
 
-    -- Attach script to Downloads
+    -- Create fresh and attach script
     make new folder action with properties {path:dlHFS, enabled:true}
     tell folder action dlHFS
         make new script with properties {name:"xlsx-clip-watcher.scpt"}
