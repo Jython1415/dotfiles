@@ -23,7 +23,11 @@ log() {
 {
   printf 'ts=%s HOME=%s DOWNLOADS=%s\n' \
     "$(date '+%Y-%m-%d %H:%M:%S')" "$HOME" "$DOWNLOADS"
-  echo "xlsx_in_downloads: $(find "$DOWNLOADS" -maxdepth 1 -name '*.xlsx' 2>/dev/null | wc -l | tr -d ' ') file(s)"
+  echo "ls -la Downloads:"
+  ls -la "$DOWNLOADS" 2>&1 | head -20
+  echo "---"
+  echo "xlsx_in_downloads: $(find "$DOWNLOADS" -maxdepth 1 -name '*.xlsx' 2>/dev/null | wc -l | tr -d ' ') file(s) (find)"
+  echo "xlsx_in_downloads_ls: $(ls "$DOWNLOADS"/*.xlsx 2>&1)"
   find "$DOWNLOADS" -maxdepth 1 -name '*.xlsx' 2>/dev/null | while read -r f; do echo "  $f"; done
 } > "$STATE_DIR/last_scan"
 
