@@ -19,6 +19,9 @@ log() {
   echo "$msg" >> "$STATE_DIR/watcher.log"
 }
 
+# Heartbeat — lets us verify the agent is alive without flooding the log
+printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S')" > "$STATE_DIR/last_scan"
+
 processed=0
 while IFS= read -r -d '' file; do
   [[ -f "$file" ]] || continue
