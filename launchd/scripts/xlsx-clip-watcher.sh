@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# xlsx-clip-watcher — one-shot triggered by launchd WatchPaths.
-# Runs whenever ~/Downloads changes. Idempotent: tracks seen files by
-# device:inode so re-downloads of the same file are ignored.
+# xlsx-clip-watcher — one-shot polled by launchd StartInterval:5.
+# Runs every 5 seconds. Idempotent: tracks seen files by device:inode
+# so re-scans of the same file are ignored.
+# WatchPaths was dropped: macOS 12+ fires on the .crdownload temp file,
+# not on the final xlsx rename, so every scan ran before the file existed.
 
 export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$HOME/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
@@ -16,8 +18,6 @@ log() {
   echo "$msg"
   echo "$msg" >> "$STATE_DIR/watcher.log"
 }
-
-log "triggered"
 
 processed=0
 while IFS= read -r -d '' file; do
@@ -47,4 +47,4 @@ while IFS= read -r -d '' file; do
   fi
 done < <(find "$DOWNLOADS" -maxdepth 1 -name "*.xlsx" -print0 2>/dev/null)
 
-log "done ($processed processed)"
+[[ $processed -gt 0 ]] && log "done ($processed processed)"
