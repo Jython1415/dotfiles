@@ -60,7 +60,7 @@ tell application "System Events"
     set folder actions enabled to true
     set dlHFS to (path to downloads folder) as text
 
-    -- Idempotent create: error -48 means already exists, which is fine.
+    -- Idempotent create: error -48 means already exists, fine.
     try
         make new folder action with properties {path:dlHFS, enabled:true}
     on error errMsg number errCode
@@ -69,17 +69,17 @@ tell application "System Events"
         end if
     end try
 
-    -- Ensure action is enabled and script attached exactly once.
-    tell folder action dlHFS
-        set enabled to true
-        try
-            set staleScripts to (every script whose name is "xlsx-clip-watcher.scpt")
-            repeat with s in staleScripts
-                delete s
-            end repeat
-        end try
-        make new script with properties {name:"xlsx-clip-watcher.scpt"}
-    end tell
+    -- Use explicit object references (avoids ambiguity inside tell blocks)
+    set enabled of folder action dlHFS to true
+
+    -- Detach any stale script entries then attach fresh
+    try
+        set staleScripts to every script of folder action dlHFS whose name is "xlsx-clip-watcher.scpt"
+        repeat with s in staleScripts
+            delete s
+        end repeat
+    end try
+    make new script of folder action dlHFS with properties {name:"xlsx-clip-watcher.scpt"}
 end tell
 return "ok"
 OSASCRIPT_CONTENT
