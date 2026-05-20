@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# install-xlsx-clip-watcher.sh — idempotent install/reload of the Folder Action watcher.
-# Run after pulling dotfiles: bash ~/.dotfiles/launchd/install-xlsx-clip-watcher.sh
+# install-xlsx-clip-watcher.sh — idempotent install of the Folder Action watcher.
+# Called by the deploy endpoint; also safe to run manually.
 #
 # DESIGN: macOS Folder Action on ~/Downloads.
-# FolderActionsAgent has Downloads TCC access natively — no bash TCC workarounds needed.
+# FolderActionsAgent has Downloads TCC access natively — no bash TCC workarounds.
 
-# Go up one level: this script lives in .dotfiles/launchd/; dotfiles root is one above
+# Script lives in .dotfiles/launchd/ — parent is dotfiles root
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 LABEL="com.joshuashew.xlsx-clip-watcher"
 STATE_DIR="$HOME/.local/state/xlsx-clip-watcher"
@@ -37,14 +37,13 @@ fi
 if [[ -f "$OLD_PLIST" ]]; then
     rm -f "$OLD_PLIST" && echo "  launchd plist: removed"
 fi
-
 # Remove legacy crontab entries
 if crontab -l 2>/dev/null | grep -q "xlsx-clip-watcher"; then
     (crontab -l 2>/dev/null | grep -v "xlsx-clip-watcher") | crontab - && \
         echo "  crontab: removed legacy entries" || true
 fi
 
-# 4. Compile AppleScript to .scpt in Folder Action Scripts directory
+# 4. Compile AppleScript → .scpt in Folder Action Scripts directory
 mkdir -p "$SCRIPTS_DIR"
 if osacompile -o "$SCPT_DEST" "$APPLESCRIPT_SRC" 2>/dev/null; then
     echo "  folder action script: compiled → $SCPT_DEST"
@@ -53,13 +52,15 @@ else
     exit 1
 fi
 
-# 5. Register Folder Action on ~/Downloads (idempotent: delete + recreate)
-REGISTER_OUT=$(osascript 2>&1 << 'OSASCRIPT'
+# 5. Register Folder Action on ~/Downloads via System Events.
+#    Written to a temp .osa file to avoid heredoc-inside-$() parsing issues.
+TMPOSA=$(mktemp /tmp/xlsx-register-fa.XXXXXX.osa)
+cat > "$TMPOSA" << 'OSASCRIPT_CONTENT'
 tell application "System Events"
     set folder actions enabled to true
     set dlHFS to (path to downloads folder) as text
 
-    -- Idempotent create: -48 means folder action already exists — that's fine.
+    -- Idempotent create: error -48 means already exists, which is fine.
     try
         make new folder action with properties {path:dlHFS, enabled:true}
     on error errMsg number errCode
@@ -68,10 +69,9 @@ tell application "System Events"
         end if
     end try
 
-    -- Ensure the action is enabled and our script is attached exactly once.
+    -- Ensure action is enabled and script attached exactly once.
     tell folder action dlHFS
         set enabled to true
-        -- Remove any stale xlsx-clip-watcher script entries then add fresh.
         try
             set staleScripts to (every script whose name is "xlsx-clip-watcher.scpt")
             repeat with s in staleScripts
@@ -82,13 +82,16 @@ tell application "System Events"
     end tell
 end tell
 return "ok"
-OSASCRIPT
-)
+OSASCRIPT_CONTENT
+
+REGISTER_OUT=$(osascript "$TMPOSA" 2>&1)
 REGISTER_RC=$?
+rm -f "$TMPOSA"
 echo "  folder action registration: $REGISTER_OUT (rc=$REGISTER_RC)"
 if [[ $REGISTER_RC -ne 0 ]]; then
-    echo "  WARNING: Folder Action registration may have failed."
-    echo "  Run manually: osascript ~/.dotfiles/launchd/register-folder-action.sh"
+    echo "  WARNING: Folder Action registration failed."
+    echo "  This can happen if System Events automation permission is not granted."
+    echo "  Run once from Terminal: bash ~/.dotfiles/launchd/install-xlsx-clip-watcher.sh"
 fi
 
 echo ""
