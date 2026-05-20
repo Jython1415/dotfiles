@@ -19,8 +19,13 @@ log() {
   echo "$msg" >> "$STATE_DIR/watcher.log"
 }
 
-# Heartbeat — lets us verify the agent is alive without flooding the log
-printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S')" > "$STATE_DIR/last_scan"
+# Heartbeat + environment snapshot — written every scan for liveness checks
+{
+  printf 'ts=%s HOME=%s DOWNLOADS=%s\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" "$HOME" "$DOWNLOADS"
+  echo "xlsx_in_downloads: $(find "$DOWNLOADS" -maxdepth 1 -name '*.xlsx' 2>/dev/null | wc -l | tr -d ' ') file(s)"
+  find "$DOWNLOADS" -maxdepth 1 -name '*.xlsx' 2>/dev/null | while read -r f; do echo "  $f"; done
+} > "$STATE_DIR/last_scan"
 
 processed=0
 while IFS= read -r -d '' file; do
