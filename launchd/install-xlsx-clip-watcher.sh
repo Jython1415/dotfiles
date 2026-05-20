@@ -59,21 +59,25 @@ tell application "System Events"
     set folder actions enabled to true
     set dlHFS to (path to downloads folder) as text
 
-    -- Idempotent: iterate all folder actions and delete any matching Downloads.
-    -- The "if exists" pattern is unreliable (path lookup quirk returns false even
-    -- when the action exists), so we iterate and match instead.
+    -- Idempotent create: -48 means folder action already exists — that's fine.
     try
-        set allFAs to every folder action
-        repeat with fa in allFAs
-            if path of fa is dlHFS then
-                delete fa
-            end if
-        end repeat
+        make new folder action with properties {path:dlHFS, enabled:true}
+    on error errMsg number errCode
+        if errCode is not -48 then
+            error errMsg number errCode
+        end if
     end try
 
-    -- Create fresh and attach script
-    make new folder action with properties {path:dlHFS, enabled:true}
+    -- Ensure the action is enabled and our script is attached exactly once.
     tell folder action dlHFS
+        set enabled to true
+        -- Remove any stale xlsx-clip-watcher script entries then add fresh.
+        try
+            set staleScripts to (every script whose name is "xlsx-clip-watcher.scpt")
+            repeat with s in staleScripts
+                delete s
+            end repeat
+        end try
         make new script with properties {name:"xlsx-clip-watcher.scpt"}
     end tell
 end tell
