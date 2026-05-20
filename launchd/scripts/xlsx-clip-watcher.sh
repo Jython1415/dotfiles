@@ -4,6 +4,9 @@
 # so re-scans of the same file are ignored.
 # WatchPaths was dropped: macOS 12+ fires on the .crdownload temp file,
 # not on the final xlsx rename, so every scan ran before the file existed.
+# Downloads access: bash in launchd GUI domain lacks TCC permission for
+# ~/Downloads. osascript (Finder Automation) is used for file listing
+# instead — it goes through Finder's TCC context.
 
 export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$HOME/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
@@ -19,22 +22,32 @@ log() {
   echo "$msg" >> "$STATE_DIR/watcher.log"
 }
 
-# Heartbeat + environment snapshot — written every scan for liveness checks
-{
-  printf 'ts=%s HOME=%s DOWNLOADS=%s\n' \
-    "$(date '+%Y-%m-%d %H:%M:%S')" "$HOME" "$DOWNLOADS"
-  echo "ls -la Downloads:"
-  ls -la "$DOWNLOADS" 2>&1 | head -20
-  echo "---"
-  echo "xlsx_in_downloads: $(find "$DOWNLOADS" -maxdepth 1 -name '*.xlsx' 2>/dev/null | wc -l | tr -d ' ') file(s) (find)"
-  echo "xlsx_in_downloads_ls: $(ls "$DOWNLOADS"/*.xlsx 2>&1)"
-  find "$DOWNLOADS" -maxdepth 1 -name '*.xlsx' 2>/dev/null | while read -r f; do echo "  $f"; done
-} > "$STATE_DIR/last_scan"
+# Heartbeat
+printf 'ts=%s\nosascript_test=%s\n' \
+  "$(date '+%Y-%m-%d %H:%M:%S')" \
+  "$(osascript -e 'tell application "Finder" to return name of desktop' 2>&1)" \
+  > "$STATE_DIR/last_scan"
+
+# List ScheduleAtAGlance xlsx files via osascript (Finder Automation) because
+# bash in a launchd GUI domain agent lacks TCC permission to read ~/Downloads.
+# If osascript fails (permission not granted), output is empty and we skip silently.
+xlsx_paths=$(osascript 2>/dev/null << 'OSASCRIPT_EOF'
+tell application "Finder"
+    set dlFolder to (path to downloads folder) as alias
+    set xlFiles to every file in dlFolder whose name starts with "ScheduleAtAGlance" and name ends with ".xlsx"
+    set pathList to ""
+    repeat with f in xlFiles
+        set pathList to pathList & POSIX path of (f as alias) & linefeed
+    end repeat
+    return pathList
+end tell
+OSASCRIPT_EOF
+)
 
 processed=0
-while IFS= read -r -d '' file; do
+while IFS= read -r file; do
+  [[ -n "$file" ]] || continue
   [[ -f "$file" ]] || continue
-  [[ "$(basename "$file")" == ScheduleAtAGlance* ]] || continue
 
   dev_inode=$(stat -f "%d:%i" "$file" 2>/dev/null) || continue
   grep -qxF "$dev_inode" "$SEEN_FILE" 2>/dev/null && continue
@@ -57,6 +70,6 @@ while IFS= read -r -d '' file; do
   else
     log "ERROR: xlcat failed for $(basename "$file") — not marking seen"
   fi
-done < <(find "$DOWNLOADS" -maxdepth 1 -name "*.xlsx" -print0 2>/dev/null)
+done <<< "$xlsx_paths"
 
 [[ $processed -gt 0 ]] && log "done ($processed processed)"
