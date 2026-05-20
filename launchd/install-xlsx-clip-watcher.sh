@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 # install-xlsx-clip-watcher.sh — idempotent install of the Folder Action watcher.
-# Called by the deploy endpoint; also safe to run manually.
+# Called by the deploy endpoint; also safe to run manually from Terminal.
 #
 # DESIGN: macOS Folder Action on ~/Downloads.
-# FolderActionsAgent has Downloads TCC access natively — no bash TCC workarounds.
+# FolderActionsAgent runs in the user GUI session and has Downloads TCC access.
+#
+# KEY GOTCHAS (learned in production, 2026-05-20):
+#   1. `folder action pathString` does a NAME lookup, not a path lookup. Always
+#      use `first folder action whose path is X` (filter reference) to find an
+#      existing action by path.
+#   2. FolderActionsAgent must be started/restarted after script attachment for
+#      the new configuration to take effect. The agent may not be running at all
+#      (confirmed on macOS 14 — it only starts on demand, not at login).
 
-# Script lives in .dotfiles/launchd/ — parent is dotfiles root
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 LABEL="com.joshuashew.xlsx-clip-watcher"
 STATE_DIR="$HOME/.local/state/xlsx-clip-watcher"
@@ -52,36 +59,43 @@ else
     exit 1
 fi
 
-# 5. Register Folder Action on ~/Downloads via System Events.
-#    Written to a temp .osa file to avoid heredoc-inside-$() parsing issues.
+# 5. Register Folder Action on ~/Downloads and attach the script.
+#    Uses filter reference (`first folder action whose path is X`) to look up
+#    any existing action — direct path-string lookup (`folder action X`) does
+#    a NAME lookup and fails with -1728 on modern macOS. Written to a temp
+#    file to avoid heredoc-in-subshell parsing issues.
 TMPOSA=$(mktemp /tmp/xlsx-register-fa.XXXXXX.osa)
 cat > "$TMPOSA" << 'OSASCRIPT_CONTENT'
 tell application "System Events"
     set folder actions enabled to true
-    set dlHFS to (path to downloads folder) as text
+    set dlPath to "/Users/" & (do shell script "whoami") & "/Downloads"
 
-    -- Idempotent create: error -48 means already exists, fine.
+    -- Create folder action for Downloads if it doesn't already exist.
+    -- -48 means already exists — fine.
     try
-        make new folder action with properties {path:dlHFS, enabled:true}
+        make new folder action with properties {path:dlPath}
     on error errMsg number errCode
         if errCode is not -48 then
             error errMsg number errCode
         end if
     end try
 
-    -- Use explicit object references (avoids ambiguity inside tell blocks)
-    set enabled of folder action dlHFS to true
+    -- Get the existing action via FILTER REFERENCE (not name lookup).
+    -- `folder action pathString` does a name lookup and returns -1728.
+    -- `first folder action whose path is X` works correctly.
+    set fa to first folder action whose path is dlPath
+    set enabled of fa to true
 
-    -- Detach any stale script entries then attach fresh
+    -- Remove any stale script entries then attach fresh.
     try
-        set staleScripts to every script of folder action dlHFS whose name is "xlsx-clip-watcher.scpt"
-        repeat with s in staleScripts
+        set stale to every script of fa whose name is "xlsx-clip-watcher.scpt"
+        repeat with s in stale
             delete s
         end repeat
     end try
-    make new script of folder action dlHFS with properties {name:"xlsx-clip-watcher.scpt"}
+    make new script of fa with properties {name:"xlsx-clip-watcher.scpt"}
+    return "ok scripts=" & (name of every script of fa)
 end tell
-return "ok"
 OSASCRIPT_CONTENT
 
 REGISTER_OUT=$(osascript "$TMPOSA" 2>&1)
@@ -89,9 +103,20 @@ REGISTER_RC=$?
 rm -f "$TMPOSA"
 echo "  folder action registration: $REGISTER_OUT (rc=$REGISTER_RC)"
 if [[ $REGISTER_RC -ne 0 ]]; then
-    echo "  WARNING: Folder Action registration failed."
-    echo "  This can happen if System Events automation permission is not granted."
-    echo "  Run once from Terminal: bash ~/.dotfiles/launchd/install-xlsx-clip-watcher.sh"
+    echo "  WARNING: Folder Action registration failed (rc=$REGISTER_RC)"
+fi
+
+# 6. Start/restart FolderActionsAgent.
+#    The agent may not be running (it doesn't auto-start at login on macOS 14).
+#    Without it running, Folder Actions never fire even if correctly configured.
+launchctl stop com.apple.FolderActionsAgent 2>/dev/null || true
+sleep 1
+launchctl start com.apple.FolderActionsAgent 2>/dev/null || true
+sleep 1
+if pgrep -q FolderActionsAgent; then
+    echo "  FolderActionsAgent: running (pid=$(pgrep FolderActionsAgent))"
+else
+    echo "  FolderActionsAgent: started (or will start on next file event)"
 fi
 
 echo ""
