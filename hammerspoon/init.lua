@@ -9,6 +9,7 @@
 --
 --   ctrl + shift + opt + Left   -> every window of the app -> left half
 --   ctrl + shift + opt + Right  -> every window of the app -> right half
+--   ctrl + shift + opt + Enter  -> every window of the app -> fill screen (not native fullscreen)
 --
 -- Modifier rationale: your Rectangle single-window halves are ctrl+opt+arrow, so adding
 -- shift namespaces the "all windows" variants without collision. ctrl+opt+cmd+arrow is
@@ -27,8 +28,10 @@ local function halfFrame(screen, side)
   local w = math.floor(f.w / 2)
   if side == "left" then
     return { x = f.x, y = f.y, w = w, h = f.h }
-  else
+  elseif side == "right" then
     return { x = f.x + (f.w - w), y = f.y, w = f.w - w, h = f.h }
+  else  -- "full": fill the usable frame (Rectangle "maximize", not native fullscreen)
+    return { x = f.x, y = f.y, w = f.w, h = f.h }
   end
 end
 
@@ -58,8 +61,9 @@ local function moveAllAppWindows(side)
 end
 
 local mods = { "ctrl", "shift", "alt" }  -- alt == option
-hs.hotkey.bind(mods, "left",  function() moveAllAppWindows("left")  end)
-hs.hotkey.bind(mods, "right", function() moveAllAppWindows("right") end)
+hs.hotkey.bind(mods, "left",   function() moveAllAppWindows("left")  end)
+hs.hotkey.bind(mods, "right",  function() moveAllAppWindows("right") end)
+hs.hotkey.bind(mods, "return", function() moveAllAppWindows("full")  end)  -- fill screen (not native fullscreen)
 
 -- Auto-reload when this file changes. `git pull` rewrites the real file in
 -- ~/.dotfiles/hammerspoon, so watch that directory (the symlink in ~/.hammerspoon
