@@ -287,6 +287,11 @@ ln -sf "$DOTFILES_DIR/.gitignore_global" "$HOME/.gitignore_global"
 git config --global core.excludesfile "$HOME/.gitignore_global"
 log "Global gitignore configured"
 
+# Symlink Hammerspoon config (window management; see hammerspoon/init.lua)
+mkdir -p "$HOME/.hammerspoon"
+ln -sf "$DOTFILES_DIR/hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua"
+log "Hammerspoon config symlinked"
+
 # Make sure bin directory is executable
 # This is currently commented out because I believe that executable status is stored in the repository
 # if [ -d "$DOTFILES_DIR/bin" ]; then
