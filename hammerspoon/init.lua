@@ -4,45 +4,74 @@
 -- pulls the change onto Ganymede and the watcher at the bottom auto-reloads Hammerspoon.
 -- Do not hand-edit ~/.hammerspoon/init.lua — it is a symlink into this repo.
 --
--- Purpose: move ALL standard windows of the frontmost app to a screen half at once,
+-- Purpose: move ALL standard windows of the frontmost app to a screen region at once,
 -- complementing Rectangle (which only ever moves the single focused window).
 --
---   ctrl + shift + opt + Left   -> every window of the app -> left half
---   ctrl + shift + opt + Right  -> every window of the app -> right half
---   ctrl + shift + opt + Enter  -> every window of the app -> fill screen (not native fullscreen)
+--   Halves / fill:
+--     ctrl + shift + opt + Left    -> every window of the app -> left half
+--     ctrl + shift + opt + Right   -> every window of the app -> right half
+--     ctrl + shift + opt + Enter   -> every window of the app -> fill screen (not native fullscreen)
+--   Thirds:
+--     ctrl + shift + opt + D       -> every window of the app -> left third
+--     ctrl + shift + opt + F       -> every window of the app -> center third
+--     ctrl + shift + opt + G       -> every window of the app -> right third
+--   Two-thirds:
+--     ctrl + shift + opt + E       -> every window of the app -> left two-thirds
+--     ctrl + shift + opt + T       -> every window of the app -> right two-thirds
 --
--- Modifier rationale: your Rectangle single-window halves are ctrl+opt+arrow, so adding
--- shift namespaces the "all windows" variants without collision. ctrl+opt+cmd+arrow is
--- avoided because Rectangle uses it for previous/next display.
+-- Modifier rationale: your Rectangle single-window actions (alternate-default set) are
+-- ctrl+opt+arrow for halves and ctrl+opt+D/F/G/E/T for the thirds/two-thirds. Adding
+-- shift namespaces the "all windows" variants 1:1 over the matching Rectangle key,
+-- without collision. ctrl+opt+cmd+arrow is avoided (Rectangle = previous/next display)
+-- and ctrl+opt+shift+Up is avoided (Rectangle = maximizeHeight). The letters D/F/G/E/T
+-- are free at the ctrl+opt+shift layer (your customized sixths/larger/smaller/almostMax
+-- live on other keys).
 
 local ax = require("hs.axuielement")
 
 hs.window.animationDuration = 0  -- instant, matching Rectangle (no slide)
 
--- 50% split of the screen's usable frame (Dock + menu bar excluded).
--- hs.screen:frame() is top-left-origin and AX-aligned, so no coordinate flip is needed
--- (Rectangle has to flip because it computes in Cocoa's bottom-left space).
--- floor(w/2) mirrors Rectangle's `floor(visibleFrameOfScreen.width * 0.5)`.
-local function halfFrame(screen, side)
+-- Compute the target rect (within the screen's usable frame) for a named region.
+-- Mirrors Rectangle's own integer math so the all-windows result lands pixel-for-pixel
+-- on Rectangle's single-window action: halves floor(w/2); thirds floor(w/3);
+-- two-thirds floor(w*2/3); right-anchored regions pin to maxX exactly as Rectangle does
+-- (origin.x = minX + w - width). center-third reproduces Rectangle's own quirk of a
+-- floored origin with an unfloored width (visibleFrame.width / 3).
+-- hs.screen:frame() is the top-left-origin usable frame (Dock + menu bar excluded) and
+-- AX-aligned, so no Cocoa coordinate flip is needed (Rectangle flips; we don't have to).
+local function regionFrame(screen, region)
   local f = screen:frame()
-  local w = math.floor(f.w / 2)
-  if side == "left" then
-    return { x = f.x, y = f.y, w = w, h = f.h }
-  elseif side == "right" then
-    return { x = f.x + (f.w - w), y = f.y, w = f.w - w, h = f.h }
+  local half     = math.floor(f.w / 2)
+  local third    = math.floor(f.w / 3)
+  local twoThird = math.floor(f.w * 2 / 3)
+
+  if region == "left" then
+    return { x = f.x, y = f.y, w = half, h = f.h }
+  elseif region == "right" then
+    return { x = f.x + (f.w - half), y = f.y, w = f.w - half, h = f.h }
+  elseif region == "left-third" then
+    return { x = f.x, y = f.y, w = third, h = f.h }
+  elseif region == "center-third" then
+    return { x = f.x + third, y = f.y, w = f.w / 3, h = f.h }
+  elseif region == "right-third" then
+    return { x = f.x + (f.w - third), y = f.y, w = third, h = f.h }
+  elseif region == "left-two-thirds" then
+    return { x = f.x, y = f.y, w = twoThird, h = f.h }
+  elseif region == "right-two-thirds" then
+    return { x = f.x + (f.w - twoThird), y = f.y, w = twoThird, h = f.h }
   else  -- "full": fill the usable frame (Rectangle "maximize", not native fullscreen)
     return { x = f.x, y = f.y, w = f.w, h = f.h }
   end
 end
 
--- Apply the half to every standard, non-minimized window of the frontmost app.
+-- Apply the region to every standard, non-minimized window of the frontmost app.
 -- Target screen = the focused window's screen, so windows scattered across displays
 -- get gathered onto the one you're looking at.
-local function moveAllAppWindows(side)
+local function moveAllAppWindows(region)
   local fw = hs.window.focusedWindow()
   if not fw then return end
   local app = fw:application()
-  local frame = halfFrame(fw:screen(), side)
+  local frame = regionFrame(fw:screen(), region)
 
   -- Chrome / Electron apps silently reject AX geometry changes unless
   -- AXEnhancedUserInterface is off. Toggle it once around the batch, then restore
@@ -61,9 +90,17 @@ local function moveAllAppWindows(side)
 end
 
 local mods = { "ctrl", "shift", "alt" }  -- alt == option
+-- halves + fill
 hs.hotkey.bind(mods, "left",   function() moveAllAppWindows("left")  end)
 hs.hotkey.bind(mods, "right",  function() moveAllAppWindows("right") end)
 hs.hotkey.bind(mods, "return", function() moveAllAppWindows("full")  end)  -- fill screen (not native fullscreen)
+-- thirds (mirror Rectangle ctrl+opt+D/F/G)
+hs.hotkey.bind(mods, "d", function() moveAllAppWindows("left-third")   end)
+hs.hotkey.bind(mods, "f", function() moveAllAppWindows("center-third") end)
+hs.hotkey.bind(mods, "g", function() moveAllAppWindows("right-third")  end)
+-- two-thirds (mirror Rectangle ctrl+opt+E/T)
+hs.hotkey.bind(mods, "e", function() moveAllAppWindows("left-two-thirds")  end)
+hs.hotkey.bind(mods, "t", function() moveAllAppWindows("right-two-thirds") end)
 
 -- Auto-reload when this file changes. `git pull` rewrites the real file in
 -- ~/.dotfiles/hammerspoon, so watch that directory (the symlink in ~/.hammerspoon
