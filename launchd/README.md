@@ -34,7 +34,7 @@ State directory: `~/.local/state/xlsx-clip-watcher/`
 
 ## Deploy
 
-The credential proxy has a `/dotfiles/deploy` endpoint (admin-scoped session)
+The credential proxy has a `/dotfiles/deploy` endpoint (any valid session)
 that runs `git pull && bash ~/.dotfiles/launchd/install-xlsx-clip-watcher.sh`.
 This is fully autonomous — no Mac commands needed.
 
