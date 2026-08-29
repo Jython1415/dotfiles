@@ -29,6 +29,27 @@
 
 local ax = require("hs.axuielement")
 
+-- Command-line / IPC bridge. Loading hs.ipc opens Hammerspoon's Mach message port,
+-- which is what makes the bundled `hs` CLI (symlinked at /opt/homebrew/bin/hs) work:
+--
+--     hs -c 'return hs.application.frontmostApplication():name()'
+--
+-- Without this require the CLI exits 69 with "can't access Hammerspoon message port
+-- Hammerspoon; is it running with the ipc module loaded?".
+--
+-- Why it is worth loading: Hammerspoon already holds this Mac's Accessibility (TCC)
+-- grant, because that grant is what lets the window hotkeys below drive AX at all.
+-- TCC is per-process, so any OTHER local tool that wants the accessibility API needs
+-- its own grant and its own one-time human click in System Settings. Routing that work
+-- through Hammerspoon over this port removes the need for a second grant entirely --
+-- the caller sends Lua, Hammerspoon (already trusted) does the AX work.
+--
+-- Security posture: the port is local-only -- it is not a network listener and nothing
+-- off this machine can reach it -- but it is unauthenticated, so any process running as
+-- this user can execute arbitrary Lua through it. That is not a widening: code running
+-- as this user can already read and write everything this user owns.
+require("hs.ipc")
+
 hs.window.animationDuration = 0  -- instant, matching Rectangle (no slide)
 
 -- Compute the target rect (within the screen's usable frame) for a named region.
