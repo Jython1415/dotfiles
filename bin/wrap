@@ -36,6 +36,10 @@ Examples:
 
   # With indentation
   pbpaste | wrap content -i 2
+
+  # Keep at most 600 characters; the middle is replaced by a
+  # "[N lines, M characters removed]" line
+  pbpaste | wrap quote --max-chars 600
         """.strip()
     )
 
@@ -83,6 +87,22 @@ Examples:
         help="Don't strip trailing newline from content"
     )
 
+    parser.add_argument(
+        "-m", "--max-chars",
+        type=int,
+        default=0,
+        metavar="N",
+        help="Keep at most about N characters of content: the start and end are "
+             "kept and the middle is replaced by a line saying how many lines "
+             "and characters were removed (0 = no limit)"
+    )
+
+    parser.add_argument(
+        "--stats",
+        action="store_true",
+        help="Print a one-line summary of any truncation to stderr"
+    )
+
     return parser.parse_args()
 
 
@@ -123,6 +143,59 @@ def format_attributes(attrs, escape=True):
     return " " + " ".join(parts)
 
 
+def _cut_back(text, n):
+    """Index at or before n to end the kept head: a line break, else a space."""
+    floor = n // 2
+    i = text.rfind("\n", 0, n + 1)
+    if i >= floor:
+        return i
+    i = max(text.rfind(" ", 0, n + 1), text.rfind("\t", 0, n + 1))
+    return i if i >= floor else n
+
+
+def _cut_forward(text, start):
+    """Index at or after start to begin the kept tail: after a line break, else a space."""
+    ceiling = start + (len(text) - start) // 2
+    i = text.find("\n", start)
+    if 0 <= i < ceiling:
+        return i + 1
+    spaces = [j for j in (text.find(" ", start), text.find("\t", start)) if j >= 0]
+    i = min(spaces) if spaces else -1
+    return i + 1 if 0 <= i < ceiling else start
+
+
+def truncate_middle(text, max_chars):
+    """Keep the start and end of text, replacing the middle with a marker line.
+
+    Returns (new_text, removed_lines, removed_chars). Cuts prefer line breaks,
+    then spaces, so words are not split. removed_lines counts lines that are
+    gone entirely; a line cut partway through still shows, so it is not counted.
+    """
+    if max_chars <= 0 or len(text) <= max_chars:
+        return text, 0, 0
+
+    head_budget = max_chars // 2
+    tail_budget = max_chars - head_budget
+    head_end = _cut_back(text, head_budget)
+    tail_start = _cut_forward(text, len(text) - tail_budget)
+    if tail_start <= head_end:
+        return text, 0, 0
+
+    head = text[:head_end].rstrip()
+    tail = text[tail_start:].lstrip()
+    removed_chars = len(text) - len(head) - len(tail)
+    total_lines = text.count("\n") + 1
+    shown_lines = (head.count("\n") + 1 if head else 0) + (tail.count("\n") + 1 if tail else 0)
+    removed_lines = max(0, total_lines - shown_lines)
+
+    parts = []
+    if removed_lines:
+        parts.append(f"{removed_lines:,} line{'s' if removed_lines != 1 else ''}")
+    parts.append(f"{removed_chars:,} character{'s' if removed_chars != 1 else ''}")
+    marker = f"[{', '.join(parts)} removed]"
+    return f"{head}\n\n{marker}\n\n{tail}", removed_lines, removed_chars
+
+
 def main():
     args = parse_args()
 
@@ -145,6 +218,15 @@ def main():
 
     if args.strip:
         content = content.strip()
+
+    original_chars = len(content)
+    content, removed_lines, removed_chars = truncate_middle(content, args.max_chars)
+    if args.stats and removed_chars:
+        cut = f"{removed_chars:,} characters"
+        if removed_lines:
+            cut = f"{removed_lines:,} lines, {cut}"
+        print(f"Quoted {original_chars - removed_chars:,} of {original_chars:,} characters "
+              f"(cut {cut} from the middle)", file=sys.stderr)
 
     if args.escape:
         content = escape_xml(content)
