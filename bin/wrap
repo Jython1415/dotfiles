@@ -1,8 +1,7 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.9"
-# dependencies = []
-# ///
+#!/usr/bin/env python3
+# Standard library only, so it runs on plain python3 (3.9+). Not `uv run`: that
+# added 20-80 ms per call, and Alfred's Tag Wrap and Quote Wrap run this on
+# every keystroke-triggered paste.
 """
 wrap - Wrap text in XML tags
 
