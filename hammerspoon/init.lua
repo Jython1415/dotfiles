@@ -6,6 +6,7 @@
 --
 -- Purpose: move ALL standard windows of the frontmost app to a screen region at once,
 -- complementing Rectangle (which only ever moves the single focused window).
+-- Also loads dim.lua (software dimming of external monitors overnight; see the block near the end).
 --
 --   Halves / fill:
 --     ctrl + shift + opt + Left    -> every window of the app -> left half
@@ -122,6 +123,30 @@ hs.hotkey.bind(mods, "g", function() moveAllAppWindows("right-third")  end)
 -- two-thirds (mirror Rectangle ctrl+opt+E/T)
 hs.hotkey.bind(mods, "e", function() moveAllAppWindows("left-two-thirds")  end)
 hs.hotkey.bind(mods, "t", function() moveAllAppWindows("right-two-thirds") end)
+
+-- Overnight software dimming for external monitors: hammerspoon/dim.lua, driven by the Alfred
+-- keyword `dim` through hammerspoon://dim?action=on|off|toggle|status|probe. It lives next to this
+-- file in ~/.dotfiles/hammerspoon (only init.lua is symlinked into ~/.hammerspoon), so that
+-- directory goes on package.path. Loaded in a pcall so a fault in it can never take the window
+-- hotkeys above down with it; a load failure is written to the same log dim.lua uses.
+do
+  local dotdir = os.getenv("HOME") .. "/.dotfiles/hammerspoon"
+  package.path = dotdir .. "/?.lua;" .. package.path
+  local ok, err = pcall(function() require("dim").start() end)
+  if not ok then
+    print("dim.lua failed to load: " .. tostring(err))
+    pcall(function()
+      local d = os.getenv("HOME") .. "/Library/Logs/claude-dim"
+      if not hs.fs.attributes(d) then hs.fs.mkdir(d) end
+      local f = io.open(d .. "/dim.jsonl", "a")
+      if f then
+        f:write(hs.json.encode({ ts = os.date("%Y-%m-%dT%H:%M:%S%z"), event = "load_failed",
+                                 msg = tostring(err) }), "\n")
+        f:close()
+      end
+    end)
+  end
+end
 
 -- Auto-reload when this file changes. `git pull` rewrites the real file in
 -- ~/.dotfiles/hammerspoon, so watch that directory (the symlink in ~/.hammerspoon
